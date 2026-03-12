@@ -1,13 +1,78 @@
 // Данные о станциях
 let stations = [];
-let currentType = 'ac'; // По умолчанию AC
-let selectedStation = null;
-let keyboardVisible = false; // Флаг: открыта ли клавиатура
+let currentType = 'ac';
+let selectedStation = null; // Станция не выбрана по умолчанию
+let keyboardVisible = false;
 
 // Инициализация Telegram Mini App
 if (window.Telegram && Telegram.WebApp) {
     Telegram.WebApp.ready();
     Telegram.WebApp.expand();
+}
+
+// Функция для правильного склонения годов
+function getYearsText(years) {
+    const num = Math.abs(years);
+    const lastDigit = num % 10;
+    const lastTwoDigits = num % 100;
+    
+    if (lastTwoDigits >= 11 && lastTwoDigits <= 19) {
+        return 'лет';
+    }
+    
+    if (lastDigit === 1) {
+        return 'год';
+    }
+    
+    if (lastDigit >= 2 && lastDigit <= 4) {
+        return 'года';
+    }
+    
+    return 'лет';
+}
+
+// Функция для правильного склонения месяцев
+function getMonthsText(months) {
+    const num = Math.abs(months);
+    const lastDigit = num % 10;
+    const lastTwoDigits = num % 100;
+    
+    if (lastTwoDigits >= 11 && lastTwoDigits <= 19) {
+        return 'месяцев';
+    }
+    
+    if (lastDigit === 1) {
+        return 'месяц';
+    }
+    
+    if (lastDigit >= 2 && lastDigit <= 4) {
+        return 'месяца';
+    }
+    
+    return 'месяцев';
+}
+
+// Функция для форматирования срока окупаемости
+function formatPayback(months) {
+    if (months === Infinity || months <= 0) {
+        return '∞ (нет прибыли)';
+    }
+    
+    const years = months / 12;
+    const wholeYears = Math.floor(years);
+    const remainingMonths = Math.round((years - wholeYears) * 12);
+    
+    if (wholeYears === 0) {
+        // Меньше года
+        const monthsRound = Math.round(months);
+        return `${monthsRound} ${getMonthsText(monthsRound)}`;
+    } else if (remainingMonths === 0) {
+        // Ровно год/года/лет
+        return `${wholeYears} ${getYearsText(wholeYears)}`;
+    } else {
+        // Годы и месяцы
+        return `${wholeYears} ${getYearsText(wholeYears)} ${remainingMonths} ${getMonthsText(remainingMonths)}`;
+    }
 }
 
 // Функция для закрытия клавиатуры
@@ -16,7 +81,6 @@ function dismissKeyboard() {
         document.activeElement.blur();
     }
     
-    // Для iOS
     if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         const hiddenInput = document.createElement('input');
         hiddenInput.style.position = 'absolute';
@@ -80,7 +144,6 @@ function vibrate(pattern = 'light') {
 
 // Загрузка данных из Google Sheets
 async function loadStations() {
-    // Используем переменные окружения или значения по умолчанию
     const API_KEY = CONFIG.API_KEY;
     const SPREADSHEET_ID = CONFIG.SPREADSHEET_ID;
     
@@ -102,12 +165,10 @@ async function loadStations() {
                 subsidy: row[7] === 'Да' || row[7] === 'да' || row[7] === 'TRUE'
             }));
             
-            // После загрузки данных обновляем селект и подсвечиваем AC кнопку
-            updateModelSelect();
+            // Обновляем селект с пустым значением по умолчанию
+            updateModelSelect(true); // true = оставить пустым
             
-            // 👇 ВАЖНО: Подсвечиваем AC кнопку при загрузке
             highlightActiveType('ac');
-            
             vibrate('success');
         }
     } catch (error) {
@@ -117,7 +178,6 @@ async function loadStations() {
     }
 }
 
-// 👇 НОВАЯ ФУНКЦИЯ: подсветка активного типа
 function highlightActiveType(type) {
     document.querySelectorAll('.type-btn').forEach(btn => {
         btn.classList.remove('active');
@@ -128,26 +188,28 @@ function highlightActiveType(type) {
 }
 
 // Обновить выпадающий список моделей
-function updateModelSelect() {
+function updateModelSelect(keepEmpty = false) {
     const select = document.getElementById('modelSelect');
     const filtered = stations.filter(s => s.type === currentType);
     
-    select.innerHTML = '<option value="">Выберите модель</option>';
+    select.innerHTML = '<option value="">🔍 Выберите модель станции</option>';
     filtered.forEach(station => {
         const option = document.createElement('option');
         option.value = station.id;
-        option.textContent = `${station.name} - ${station.price.toLocaleString()} ₽${station.subsidy ? ' (субсидия)' : ''}`;
+        option.textContent = `${station.name} - ${station.price.toLocaleString()} ₽${station.subsidy ? ' ✨' : ''}`;
         select.appendChild(option);
     });
     
-    if (filtered.length > 0) {
+    if (!keepEmpty && filtered.length > 0) {
+        // Если не нужно оставлять пустым, выбираем первую станцию
         select.value = filtered[0].id;
         updateStationInfo();
     } else {
-        // Если нет станций выбранного типа
+        // Оставляем пустым
+        select.value = '';
         selectedStation = null;
         document.getElementById('subsidyInfo').style.display = 'none';
-        document.getElementById('results').innerHTML = '<div class="error">Нет доступных станций этого типа</div>';
+        document.getElementById('results').innerHTML = '<div class="info-message">👆 Выберите модель станции для расчета</div>';
     }
 }
 
@@ -159,6 +221,7 @@ function updateStationInfo() {
     if (!stationId) {
         selectedStation = null;
         document.getElementById('subsidyInfo').style.display = 'none';
+        document.getElementById('results').innerHTML = '<div class="info-message">👆 Выберите модель станции для расчета</div>';
         return;
     }
     
@@ -181,10 +244,10 @@ function setType(type) {
     currentType = type;
     vibrate('medium');
     
-    // Подсвечиваем выбранный тип
     highlightActiveType(type);
     
-    updateModelSelect();
+    // При смене типа сбрасываем выбор станции
+    updateModelSelect(true); // true = оставляем пустым
 }
 
 // Обновить значение часов
@@ -195,7 +258,9 @@ function updateHours() {
     clearTimeout(window.hoursTimer);
     window.hoursTimer = setTimeout(() => {
         vibrate('light');
-        calculate();
+        if (selectedStation) {
+            calculate();
+        }
     }, 50);
 }
 
@@ -293,7 +358,7 @@ function calculateEnergyDetails(hours, station) {
 // ОСНОВНАЯ ФУНКЦИЯ РАСЧЕТА
 function calculate() {
     if (!selectedStation) {
-        document.getElementById('results').innerHTML = '<div class="error">Выберите модель станции</div>';
+        document.getElementById('results').innerHTML = '<div class="info-message">👆 Выберите модель станции для расчета</div>';
         return;
     }
     
@@ -325,8 +390,7 @@ function calculate() {
     
     const totalCost = selectedStation.price * stationCount;
     let paybackMonths = profitMonth > 0 ? totalCost / profitMonth : Infinity;
-    let paybackText = profitMonth <= 0 ? '∞ (нет прибыли)' : 
-        `${paybackMonths.toFixed(1)} мес (${(paybackMonths/12).toFixed(1)} лет)`;
+    let paybackText = formatPayback(paybackMonths);
     
     const formatMoney = (num) => {
         return Math.round(num).toLocaleString() + ' ₽';
@@ -428,17 +492,17 @@ document.addEventListener('DOMContentLoaded', function() {
     // Вибрация при изменении полей
     document.getElementById('stationCount').addEventListener('change', function() {
         vibrate('light');
-        calculate();
+        if (selectedStation) calculate();
     });
     
     document.getElementById('costPrice').addEventListener('change', function() {
         vibrate('light');
-        calculate();
+        if (selectedStation) calculate();
     });
     
     document.getElementById('clientPrice').addEventListener('change', function() {
         vibrate('light');
-        calculate();
+        if (selectedStation) calculate();
     });
     
     // Отслеживаем фокус на полях ввода
@@ -494,7 +558,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // 👇 ВАЖНО: Подсвечиваем AC кнопку при загрузке страницы
     highlightActiveType('ac');
     
     // Загружаем данные

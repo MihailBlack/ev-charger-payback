@@ -1,6 +1,6 @@
 // Данные о станциях
 let stations = [];
-let currentType = 'ac';
+let currentType = 'ac'; // По умолчанию AC
 let selectedStation = null;
 let keyboardVisible = false; // Флаг: открыта ли клавиатура
 
@@ -80,7 +80,11 @@ function vibrate(pattern = 'light') {
 
 // Загрузка данных из Google Sheets
 async function loadStations() {
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.SPREADSHEET_ID}/values/${CONFIG.RANGE}?key=${CONFIG.API_KEY}`;
+    // Используем переменные окружения или значения по умолчанию
+    const API_KEY = CONFIG.API_KEY;
+    const SPREADSHEET_ID = CONFIG.SPREADSHEET_ID;
+    
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${CONFIG.RANGE}?key=${API_KEY}`;
     
     try {
         const response = await fetch(url);
@@ -98,7 +102,12 @@ async function loadStations() {
                 subsidy: row[7] === 'Да' || row[7] === 'да' || row[7] === 'TRUE'
             }));
             
+            // После загрузки данных обновляем селект и подсвечиваем AC кнопку
             updateModelSelect();
+            
+            // 👇 ВАЖНО: Подсвечиваем AC кнопку при загрузке
+            highlightActiveType('ac');
+            
             vibrate('success');
         }
     } catch (error) {
@@ -106,6 +115,16 @@ async function loadStations() {
         document.getElementById('modelSelect').innerHTML = '<option value="">Ошибка загрузки</option>';
         vibrate('error');
     }
+}
+
+// 👇 НОВАЯ ФУНКЦИЯ: подсветка активного типа
+function highlightActiveType(type) {
+    document.querySelectorAll('.type-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.querySelectorAll(`.type-btn.${type}`).forEach(btn => {
+        btn.classList.add('active');
+    });
 }
 
 // Обновить выпадающий список моделей
@@ -124,6 +143,11 @@ function updateModelSelect() {
     if (filtered.length > 0) {
         select.value = filtered[0].id;
         updateStationInfo();
+    } else {
+        // Если нет станций выбранного типа
+        selectedStation = null;
+        document.getElementById('subsidyInfo').style.display = 'none';
+        document.getElementById('results').innerHTML = '<div class="error">Нет доступных станций этого типа</div>';
     }
 }
 
@@ -157,12 +181,8 @@ function setType(type) {
     currentType = type;
     vibrate('medium');
     
-    document.querySelectorAll('.type-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    document.querySelectorAll(`.type-btn.${type}`).forEach(btn => {
-        btn.classList.add('active');
-    });
+    // Подсвечиваем выбранный тип
+    highlightActiveType(type);
     
     updateModelSelect();
 }
@@ -403,7 +423,7 @@ function calculate() {
     vibrate('medium');
 }
 
-// *** ИСПРАВЛЕННАЯ ЛОГИКА КЛАВИАТУРЫ ***
+// Логика клавиатуры
 document.addEventListener('DOMContentLoaded', function() {
     // Вибрация при изменении полей
     document.getElementById('stationCount').addEventListener('change', function() {
@@ -425,45 +445,39 @@ document.addEventListener('DOMContentLoaded', function() {
     const inputs = document.querySelectorAll('input, select');
     inputs.forEach(input => {
         input.addEventListener('focus', function() {
-            keyboardVisible = true; // Клавиатура открыта
+            keyboardVisible = true;
         });
         
         input.addEventListener('blur', function() {
-            // Даем небольшую задержку, чтобы проверить, не перешел ли фокус на другое поле
             setTimeout(() => {
                 if (document.activeElement && 
                     (document.activeElement.tagName === 'INPUT' || 
                      document.activeElement.tagName === 'SELECT')) {
-                    // Фокус на другом поле - клавиатура все еще открыта
                     keyboardVisible = true;
                 } else {
-                    keyboardVisible = false; // Клавиатура закрыта
+                    keyboardVisible = false;
                 }
             }, 100);
         });
     });
     
-    // ЗАКРЫТИЕ КЛАВИАТУРЫ ТОЛЬКО ПРИ КЛИКЕ НЕ НА ПОЛЯ ВВОДА
+    // Закрытие клавиатуры при клике не на поля ввода
     document.addEventListener('mousedown', function(e) {
-        // Проверяем, кликнули ли мы по полю ввода или его лейблу
         const isInput = e.target.tagName === 'INPUT' || 
                        e.target.tagName === 'SELECT' || 
                        e.target.closest('input') || 
                        e.target.closest('select') ||
                        e.target.closest('.input-field') ||
                        e.target.closest('.select-box') ||
-                       e.target.closest('.label'); // Лейбл тоже не закрываем клавиатуру
+                       e.target.closest('.label');
         
-        // Если кликнули НЕ по полю ввода И клавиатура открыта - закрываем
         if (!isInput && keyboardVisible) {
-            // Даем небольшую задержку, чтобы событие focus успело обработаться
             setTimeout(() => {
                 dismissKeyboard();
             }, 50);
         }
     });
     
-    // Для touch-устройств
     document.addEventListener('touchstart', function(e) {
         const isInput = e.target.tagName === 'INPUT' || 
                        e.target.tagName === 'SELECT' || 
@@ -480,8 +494,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // НЕ закрываем клавиатуру при скролле (иначе раздражает)
-    // Убираем обработчик скролла
+    // 👇 ВАЖНО: Подсвечиваем AC кнопку при загрузке страницы
+    highlightActiveType('ac');
     
     // Загружаем данные
     loadStations();

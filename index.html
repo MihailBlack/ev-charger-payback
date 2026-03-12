@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Калькулятор окупаемости ЗС</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Карточка выбора типа -->
+        <div class="card">
+            <h2>⚡ Тип станции</h2>
+            <div class="type-switch">
+                <button class="type-btn ac" onclick="setType('ac')">AC</button>
+                <button class="type-btn dc" onclick="setType('dc')">DC</button>
+            </div>
+            
+            <select id="modelSelect" class="select-box" onchange="updateStationInfo()">
+                <option value="">Загрузка моделей...</option>
+            </select>
+            
+            <div id="subsidyInfo" style="display: none; margin-top: 8px;">
+                <span class="subsidy-badge">✨ Возможна субсидия</span>
+            </div>
+        </div>
+        
+        <!-- Карточка параметров -->
+        <div class="card">
+            <h2>📊 Параметры расчета</h2>
+            
+            <label class="label">Количество станций в сети</label>
+            <input type="number" id="stationCount" class="input-field" min="1" value="1" onchange="calculate()">
+            
+            <div class="slider-container">
+                <div class="slider-value">
+                    <span>Загрузка в день</span>
+                    <span id="hoursValue">12 часов</span>
+                </div>
+                <input type="range" id="hoursSlider" min="0" max="24" value="12" step="1" oninput="updateHours()" onchange="calculate()">
+            </div>
+            
+            <label class="label">Себестоимость ЭЭ (₽/кВт·ч)</label>
+            <input type="number" id="costPrice" class="input-field" min="0" step="0.1" value="5" onchange="calculate()">
+            
+            <label class="label">Цена для клиента (₽/кВт·ч)</label>
+            <input type="number" id="clientPrice" class="input-field" min="0" step="0.1" value="15" onchange="calculate()">
+        </div>
+        
+        <!-- Карточка результатов -->
+        <div class="card">
+            <h2>📈 Результаты</h2>
+            <div id="results">
+                <div class="loading">Введите данные для расчета</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

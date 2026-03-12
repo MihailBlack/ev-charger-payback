@@ -287,7 +287,7 @@ function calculateEnergyDetails(hours, station) {
                 details.total = CONFIG.AC_REAL_SPEED * hours;
                 details.mode = 'Одна машина';
                 details.breakdown.push({
-                    period: '0-12 часов',
+                    period: 'Весь день',
                     speed: CONFIG.AC_REAL_SPEED,
                     hours: hours,
                     energy: CONFIG.AC_REAL_SPEED * hours
@@ -326,7 +326,7 @@ function calculateEnergyDetails(hours, station) {
                 details.total = CONFIG.DC_MAX_SPEED * hours;
                 details.mode = 'Одна машина (60 кВт)';
                 details.breakdown.push({
-                    period: '0-12 часов',
+                    period: 'Весь день',
                     speed: CONFIG.DC_MAX_SPEED,
                     hours: hours,
                     energy: CONFIG.DC_MAX_SPEED * hours
@@ -400,12 +400,13 @@ function calculate() {
         return Math.round(num).toLocaleString() + ' кВт·ч';
     };
     
+    // Формируем HTML для детализации энергии (БЕЗ ЛИШНЕГО ТЕКСТА)
     let energyBreakdownHtml = '';
     energyDetails.breakdown.forEach(item => {
         energyBreakdownHtml += `
             <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px; padding-left: 12px; border-left: 2px solid #007AFF;">
-                <span style="color: #666;">${item.period}:</span>
-                <span style="font-weight: 500;">${item.speed} кВт × ${item.hours}ч = ${formatEnergy(item.energy)}</span>
+                <span style="color: #666;">${item.speed} кВт × ${item.hours}ч</span>
+                <span style="font-weight: 500;">${formatEnergy(item.energy)}</span>
             </div>
         `;
     });
@@ -440,12 +441,8 @@ function calculate() {
                 <h3 style="font-size: 16px; font-weight: 600; color: #1a1a1a;">Детализация по энергии</h3>
             </div>
             
+            <!-- ТОЛЬКО ЦИФРЫ, БЕЗ ЛИШНИХ НАДПИСЕЙ -->
             <div style="margin-bottom: 20px;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 10px; padding: 0 4px;">
-                    <span style="color: #666;">Режим работы:</span>
-                    <span style="font-weight: 600; color: #007AFF;">${energyDetails.mode}</span>
-                </div>
-                
                 ${energyBreakdownHtml}
             </div>
             

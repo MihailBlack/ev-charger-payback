@@ -7,7 +7,7 @@
 
 body {
     background-color: #f5f5f5;
-    padding: 16px;
+    padding: 0;
     min-height: 100vh;
     display: flex;
     justify-content: center;
@@ -16,24 +16,30 @@ body {
 .container {
     max-width: 500px;
     width: 100%;
+    padding: 20px 16px 30px 16px; /* Защитная зона: сверху 20px, снизу 30px, по бокам 16px */
+    margin-top: env(safe-area-inset-top, 20px); /* Защита для iPhone с челкой */
+    padding-top: max(20px, env(safe-area-inset-top, 20px)); /* Дополнительная защита */
+    padding-bottom: max(30px, env(safe-area-inset-bottom, 20px)); /* Защита для нижней кнопки на iPhone */
 }
 
 /* Flat дизайн карточки */
 .card {
     background: white;
-    border-radius: 20px;
+    border-radius: 24px; /* Чуть скруглил для современного вида */
     padding: 20px;
     margin-bottom: 16px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.02);
     border: 1px solid #f0f0f0;
 }
 
+/* Заголовки карточек */
 h2 {
     font-size: 18px;
     font-weight: 600;
     color: #1a1a1a;
-    margin-bottom: 16px;
+    margin-bottom: 20px; /* Увеличил отступ */
     letter-spacing: -0.3px;
+    padding-top: 4px; /* Небольшой отступ внутри карточки */
 }
 
 /* Переключатели AC/DC */
@@ -45,8 +51,8 @@ h2 {
 
 .type-btn {
     flex: 1;
-    padding: 14px;
-    border-radius: 16px;
+    padding: 16px; /* Чуть увеличил для зоны нажатия */
+    border-radius: 20px;
     border: 2px solid transparent;
     background: #f8f8f8;
     font-size: 16px;
@@ -54,6 +60,8 @@ h2 {
     cursor: pointer;
     transition: all 0.2s ease;
     color: #666;
+    min-height: 56px; /* Минимальная высота для удобного нажатия */
+    -webkit-tap-highlight-color: transparent; /* Убирает серую подсветку при тапе */
 }
 
 .type-btn.active {
@@ -68,8 +76,8 @@ h2 {
 /* Выпадающие списки */
 .select-box {
     width: 100%;
-    padding: 16px;
-    border-radius: 16px;
+    padding: 16px 20px; /* Увеличил горизонтальный отступ */
+    border-radius: 20px;
     border: 1.5px solid #e8e8e8;
     background: white;
     font-size: 15px;
@@ -77,19 +85,21 @@ h2 {
     appearance: none;
     background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
     background-repeat: no-repeat;
-    background-position: right 16px center;
+    background-position: right 20px center;
     background-size: 18px;
+    min-height: 58px; /* Высота для удобного тапа */
 }
 
 /* Поля ввода */
 .input-field {
     width: 100%;
-    padding: 16px;
-    border-radius: 16px;
+    padding: 16px 20px;
+    border-radius: 20px;
     border: 1.5px solid #e8e8e8;
     font-size: 15px;
-    margin-bottom: 16px;
+    margin-bottom: 20px; /* Увеличил отступ */
     transition: border-color 0.2s;
+    min-height: 58px;
 }
 
 .input-field:focus {
@@ -101,38 +111,41 @@ h2 {
     font-size: 14px;
     font-weight: 500;
     color: #666;
-    margin-bottom: 6px;
+    margin-bottom: 8px; /* Увеличил */
     display: block;
+    padding-left: 4px;
 }
 
 /* Слайдер для часов */
 .slider-container {
-    margin-bottom: 24px;
+    margin-bottom: 28px;
+    padding: 0 4px;
 }
 
 .slider-value {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 8px;
+    margin-bottom: 12px;
 }
 
 .slider-value span:first-child {
     color: #666;
     font-size: 14px;
+    font-weight: 500;
 }
 
 .slider-value span:last-child {
     background: #f0f0f0;
-    padding: 6px 12px;
-    border-radius: 30px;
+    padding: 8px 16px;
+    border-radius: 40px;
     font-weight: 600;
     font-size: 16px;
 }
 
 input[type=range] {
     width: 100%;
-    height: 6px;
+    height: 8px;
     border-radius: 10px;
     background: #e0e0e0;
     -webkit-appearance: none;
@@ -140,34 +153,37 @@ input[type=range] {
 
 input[type=range]::-webkit-slider-thumb {
     -webkit-appearance: none;
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
     background: white;
     border-radius: 50%;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    border: 2px solid #007AFF;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+    border: 2.5px solid #007AFF;
     cursor: pointer;
-    margin-top: -9px;
+    margin-top: -10px;
 }
 
 /* Карточки результатов */
 .result-grid {
     display: grid;
     gap: 12px;
+    margin-bottom: 8px;
 }
 
 .result-item {
     background: #f8f8f8;
-    border-radius: 16px;
-    padding: 16px;
+    border-radius: 18px;
+    padding: 18px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    min-height: 64px;
 }
 
 .result-label {
     color: #666;
     font-size: 14px;
+    font-weight: 500;
 }
 
 .result-value {
@@ -183,12 +199,13 @@ input[type=range]::-webkit-slider-thumb {
 .payback-badge {
     background: #34C759;
     color: white;
-    padding: 12px 20px;
-    border-radius: 40px;
+    padding: 16px 24px;
+    border-radius: 60px;
     font-weight: 700;
-    font-size: 20px;
+    font-size: 22px;
     text-align: center;
-    margin-top: 8px;
+    margin-top: 12px;
+    letter-spacing: -0.3px;
 }
 
 .subsidy-badge {
@@ -205,11 +222,46 @@ input[type=range]::-webkit-slider-thumb {
 .loading {
     text-align: center;
     color: #666;
-    padding: 20px;
+    padding: 30px 20px;
 }
 
 .error {
     color: #FF3B30;
     text-align: center;
+    padding: 30px 20px;
+}
+
+/* Детализация по энергии */
+.energy-detail {
+    margin-top: 24px;
     padding: 20px;
+    background: #f0f7ff;
+    border-radius: 24px;
+}
+
+.energy-detail h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 16px;
+}
+
+/* Защита от краев на iPhone */
+@supports (padding: max(0px)) {
+    body {
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+    }
+    
+    .container {
+        padding-left: max(16px, env(safe-area-inset-left));
+        padding-right: max(16px, env(safe-area-inset-right));
+    }
+}
+
+/* Улучшаем тактильные ощущения */
+.type-btn, .select-box, .input-field, button {
+    touch-action: manipulation; /* Отключает двойной тап для зума */
+    -webkit-touch-callout: none; /* Отключает меню при долгом тапе */
+    user-select: none;
 }

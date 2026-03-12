@@ -9,6 +9,52 @@ if (window.Telegram && Telegram.WebApp) {
     Telegram.WebApp.expand();
 }
 
+// Функция вибрации
+function vibrate(pattern = 'light') {
+    if (!window.Telegram || !Telegram.WebApp || !Telegram.WebApp.HapticFeedback) {
+        // Если нет Telegram WebApp, пробуем нативную вибрацию
+        if (window.navigator && window.navigator.vibrate) {
+            if (pattern === 'light') window.navigator.vibrate(10);
+            else if (pattern === 'medium') window.navigator.vibrate(20);
+            else if (pattern === 'heavy') window.navigator.vibrate(30);
+            else if (pattern === 'success') window.navigator.vibrate([10, 30, 10]);
+            else if (pattern === 'error') window.navigator.vibrate([30, 30, 30]);
+        }
+        return;
+    }
+    
+    // Используем Telegram Haptic Feedback
+    try {
+        switch(pattern) {
+            case 'light':
+                Telegram.WebApp.HapticFeedback.impactOccurred('light');
+                break;
+            case 'medium':
+                Telegram.WebApp.HapticFeedback.impactOccurred('medium');
+                break;
+            case 'heavy':
+                Telegram.WebApp.HapticFeedback.impactOccurred('heavy');
+                break;
+            case 'success':
+                Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+                break;
+            case 'error':
+                Telegram.WebApp.HapticFeedback.notificationOccurred('error');
+                break;
+            case 'warning':
+                Telegram.WebApp.HapticFeedback.notificationOccurred('warning');
+                break;
+            case 'selection':
+                Telegram.WebApp.HapticFeedback.selectionChanged();
+                break;
+            default:
+                Telegram.WebApp.HapticFeedback.impactOccurred('light');
+        }
+    } catch (e) {
+        console.log('Haptic feedback error:', e);
+    }
+}
+
 // Загрузка данных из Google Sheets
 async function loadStations() {
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.SPREADSHEET_ID}/values/${CONFIG.RANGE}?key=${CONFIG.API_KEY}`;
@@ -31,10 +77,12 @@ async function loadStations() {
             }));
             
             updateModelSelect();
+            vibrate('success'); // Вибрация при успешной загрузке
         }
     } catch (error) {
         console.error('Ошибка загрузки:', error);
         document.getElementById('modelSelect').innerHTML = '<option value="">Ошибка загрузки</option>';
+        vibrate('error'); // Вибрация при ошибке
     }
 }
 
@@ -73,6 +121,7 @@ function updateStationInfo() {
     // Показываем информацию о субсидии
     if (selectedStation && selectedStation.subsidy) {
         document.getElementById('subsidyInfo').style.display = 'block';
+        vibrate('light'); // Легкая вибрация при появлении субсидии
     } else {
         document.getElementById('subsidyInfo').style.display = 'none';
     }
@@ -82,7 +131,10 @@ function updateStationInfo() {
 
 // Установить тип станции (AC/DC)
 function setType(type) {
+    if (type === currentType) return; // Не вибрируем если тот же тип
+    
     currentType = type;
+    vibrate('medium'); // Вибрация при переключении типа
     
     // Обновляем активную кнопку
     document.querySelectorAll('.type-btn').forEach(btn => {
@@ -99,7 +151,13 @@ function setType(type) {
 function updateHours() {
     const hours = document.getElementById('hoursSlider').value;
     document.getElementById('hoursValue').textContent = hours + ' часов';
-    calculate();
+    
+    // Легкая вибрация при изменении слайдера (с задержкой, чтобы не спамить)
+    clearTimeout(window.hoursTimer);
+    window.hoursTimer = setTimeout(() => {
+        vibrate('light');
+        calculate();
+    }, 50);
 }
 
 // Расчет проданной энергии с детализацией
@@ -258,7 +316,7 @@ function calculate() {
     let energyBreakdownHtml = '';
     energyDetails.breakdown.forEach(item => {
         energyBreakdownHtml += `
-            <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; padding-left: 8px; border-left: 2px solid #e0e0e0;">
+            <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px; padding-left: 12px; border-left: 2px solid #007AFF;">
                 <span style="color: #666;">${item.period}:</span>
                 <span style="font-weight: 500;">${item.speed} кВт × ${item.hours}ч = ${formatEnergy(item.energy)}</span>
             </div>
@@ -291,56 +349,87 @@ function calculate() {
         </div>
         
         <!-- Детальная статистика по энергии -->
-        <div style="margin-top: 24px; padding: 16px; background: #f0f7ff; border-radius: 16px;">
+        <div class="energy-detail">
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
                 <span style="font-size: 20px;">🔋</span>
                 <h3 style="font-size: 16px; font-weight: 600; color: #1a1a1a;">Детализация по энергии</h3>
             </div>
             
-            <div style="margin-bottom: 16px;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <div style="margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px; padding: 0 4px;">
                     <span style="color: #666;">Режим работы:</span>
-                    <span style="font-weight: 600;">${energyDetails.mode}</span>
+                    <span style="font-weight: 600; color: #007AFF;">${energyDetails.mode}</span>
                 </div>
                 
                 ${energyBreakdownHtml}
             </div>
             
-            <div style="background: white; border-radius: 12px; padding: 12px; margin-top: 12px;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <div style="background: white; border-radius: 16px; padding: 16px; margin-top: 16px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
                     <span style="color: #666;">Продано клиентам:</span>
                     <span style="font-weight: 700;">${formatEnergy(energyPerDay * 30)}/мес</span>
                 </div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
                     <span style="color: #666;">Потреблено из сети:</span>
                     <span style="font-weight: 700;">${formatEnergy(energyConsumed * 30)}/мес</span>
                 </div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #ff9f0a;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px; color: #FF9F0A;">
                     <span>Потери на КПД (${currentType === 'dc' ? '7%' : '10%'}):</span>
                     <span style="font-weight: 700;">${formatEnergy(energyLoss * 30)}/мес</span>
                 </div>
-                <div style="display: flex; justify-content: space-between; padding-top: 8px; border-top: 1px dashed #ccc; margin-top: 8px;">
+                <div style="display: flex; justify-content: space-between; padding-top: 12px; border-top: 1px dashed #ccc; margin-top: 8px;">
                     <span style="color: #666;">Стоимость 1 кВт·ч:</span>
                     <span style="font-weight: 600;">${costPrice.toFixed(2)} ₽ (покупка) / ${clientPrice.toFixed(2)} ₽ (продажа)</span>
                 </div>
             </div>
             
-            <div style="margin-top: 12px; font-size: 12px; color: #666; background: #e8f0fe; padding: 8px; border-radius: 8px;">
+            <div style="margin-top: 16px; font-size: 13px; color: #666; background: #e8f0fe; padding: 12px; border-radius: 12px;">
                 ⚡ Маржа с 1 кВт·ч: ${(clientPrice - (costPrice / efficiency)).toFixed(2)} ₽ (с учетом потерь)
             </div>
         </div>
         
-        <div style="margin-top: 20px;">
-            <div style="font-size: 14px; color: #666; margin-bottom: 8px;">⏱️ Срок окупаемости</div>
+        <div style="margin-top: 24px;">
+            <div style="font-size: 15px; color: #666; margin-bottom: 8px; font-weight: 500;">⏱️ Срок окупаемости</div>
             <div class="payback-badge">${paybackText}</div>
         </div>
         
-        <div style="margin-top: 16px; font-size: 12px; color: #999; text-align: center;">
+        <div style="margin-top: 20px; font-size: 12px; color: #999; text-align: center; padding-bottom: 8px;">
             КПД: ${currentType === 'dc' ? '93% (DC)' : '90% (AC)'} | 
             Станций в сети: ${stationCount}
         </div>
     `;
+    
+    // Вибрация при расчете (medium)
+    vibrate('medium');
 }
 
-// Загружаем данные при старте
-loadStations();
+// Добавляем вибрацию на все инпуты
+document.addEventListener('DOMContentLoaded', function() {
+    // Вибрация при изменении количества станций
+    document.getElementById('stationCount').addEventListener('change', function() {
+        vibrate('light');
+        calculate();
+    });
+    
+    // Вибрация при изменении себестоимости
+    document.getElementById('costPrice').addEventListener('change', function() {
+        vibrate('light');
+        calculate();
+    });
+    
+    // Вибрация при изменении цены для клиента
+    document.getElementById('clientPrice').addEventListener('change', function() {
+        vibrate('light');
+        calculate();
+    });
+    
+    // Загружаем данные при старте
+    loadStations();
+});
+
+// Если пользователь тыкает на субсидию - дополнительная вибрация
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.subsidy-badge')) {
+        vibrate('success');
+    }
+});

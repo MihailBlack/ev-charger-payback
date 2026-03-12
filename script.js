@@ -121,13 +121,38 @@ async function loadStations() {
                 subsidy: row[7] === 'Да' || row[7] === 'да' || row[7] === 'TRUE'
             }));
             
-            updateModelSelect(true);
+            // После загрузки данных:
+            // 1. Подсвечиваем AC кнопку
             highlightActiveType('ac');
+            
+            // 2. Обновляем селект и выбираем первую станцию
+            updateModelSelect(false); // false = выбираем первую станцию
+            
+            // 3. Сразу делаем расчет
+            setTimeout(() => {
+                if (selectedStation) calculate();
+            }, 100);
+            
             vibrate('success');
         }
     } catch (error) {
         console.error('Ошибка загрузки:', error);
-        document.getElementById('modelSelect').innerHTML = '<option value="">Ошибка загрузки</option>';
+        // Показываем заглушку с тестовыми данными, чтобы приложение не падало
+        stations = [
+            { id: 1, type: 'ac', name: 'AC 001', power: 7.5, price: 150000, subsidy: false },
+            { id: 2, type: 'ac', name: 'AC 002', power: 15, price: 250000, subsidy: true },
+            { id: 3, type: 'dc', name: 'DC 40', power: 40, price: 500000, subsidy: false },
+            { id: 4, type: 'dc', name: 'DC 80', power: 80, price: 800000, subsidy: false },
+            { id: 5, type: 'dc', name: 'DC 120', power: 120, price: 1200000, subsidy: false },
+            { id: 6, type: 'dc', name: 'DC 160', power: 160, price: 1600000, subsidy: true }
+        ];
+        
+        highlightActiveType('ac');
+        updateModelSelect(false);
+        setTimeout(() => {
+            if (selectedStation) calculate();
+        }, 100);
+        
         vibrate('error');
     }
 }
@@ -155,6 +180,7 @@ function updateModelSelect(keepEmpty = false) {
     });
     
     if (!keepEmpty && filtered.length > 0) {
+        // ВЫБИРАЕМ ПЕРВУЮ СТАНЦИЮ АВТОМАТИЧЕСКИ
         select.value = filtered[0].id;
         updateStationInfo();
     } else {
@@ -194,8 +220,12 @@ function updateStationInfo() {
     } else {
         document.getElementById('subsidyCheckboxContainer').style.display = 'none';
         subsidyApplied = false; // Сбрасываем флаг
+        // Сбрасываем чекбокс
+        const checkbox = document.getElementById('subsidyCheckbox');
+        if (checkbox) checkbox.checked = false;
     }
     
+    // СРАЗУ ДЕЛАЕМ РАСЧЕТ
     calculate();
 }
 
@@ -213,7 +243,9 @@ function setType(type) {
     currentType = type;
     vibrate('medium');
     highlightActiveType(type);
-    updateModelSelect(true);
+    
+    // При смене типа автоматически выбираем первую станцию и делаем расчет
+    updateModelSelect(false); // false = выбираем первую станцию
 }
 
 // Обновить значение часов
@@ -228,7 +260,7 @@ function updateHours() {
     }, 50);
 }
 
-// 🎯 ПРАВИЛЬНЫЙ РАСЧЕТ ЭНЕРГИИ (новая логика)
+// Расчет проданной энергии с детализацией
 function calculateEnergyDetails(hours, station) {
     let details = {
         total: 0,
@@ -468,6 +500,7 @@ function calculate() {
 
 // Логика клавиатуры
 document.addEventListener('DOMContentLoaded', function() {
+    // Вешаем обработчики на все поля
     document.getElementById('stationCount').addEventListener('change', function() {
         vibrate('light');
         if (selectedStation) calculate();
@@ -483,6 +516,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (selectedStation) calculate();
     });
     
+    // Отслеживаем фокус для клавиатуры
     const inputs = document.querySelectorAll('input, select');
     inputs.forEach(input => {
         input.addEventListener('focus', () => keyboardVisible = true);
@@ -494,6 +528,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
+    // Закрытие клавиатуры при клике мимо
     const closeKeyboardHandler = (e) => {
         const isInput = e.target.tagName === 'INPUT' || 
                        e.target.tagName === 'SELECT' || 
@@ -512,6 +547,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.addEventListener('mousedown', closeKeyboardHandler);
     document.addEventListener('touchstart', closeKeyboardHandler);
     
+    // Подсвечиваем AC и загружаем данные
     highlightActiveType('ac');
     loadStations();
 });

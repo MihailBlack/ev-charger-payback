@@ -1,8 +1,9 @@
 // Данные о станциях
 let stations = [];
 let currentType = 'ac';
-let selectedStation = null; // Станция не выбрана по умолчанию
+let selectedStation = null;
 let keyboardVisible = false;
+let subsidyApplied = false; // Флаг для субсидии 50%
 
 // Инициализация Telegram Mini App
 if (window.Telegram && Telegram.WebApp) {
@@ -16,18 +17,9 @@ function getYearsText(years) {
     const lastDigit = num % 10;
     const lastTwoDigits = num % 100;
     
-    if (lastTwoDigits >= 11 && lastTwoDigits <= 19) {
-        return 'лет';
-    }
-    
-    if (lastDigit === 1) {
-        return 'год';
-    }
-    
-    if (lastDigit >= 2 && lastDigit <= 4) {
-        return 'года';
-    }
-    
+    if (lastTwoDigits >= 11 && lastTwoDigits <= 19) return 'лет';
+    if (lastDigit === 1) return 'год';
+    if (lastDigit >= 2 && lastDigit <= 4) return 'года';
     return 'лет';
 }
 
@@ -37,44 +29,23 @@ function getMonthsText(months) {
     const lastDigit = num % 10;
     const lastTwoDigits = num % 100;
     
-    if (lastTwoDigits >= 11 && lastTwoDigits <= 19) {
-        return 'месяцев';
-    }
-    
-    if (lastDigit === 1) {
-        return 'месяц';
-    }
-    
-    if (lastDigit >= 2 && lastDigit <= 4) {
-        return 'месяца';
-    }
-    
+    if (lastTwoDigits >= 11 && lastTwoDigits <= 19) return 'месяцев';
+    if (lastDigit === 1) return 'месяц';
+    if (lastDigit >= 2 && lastDigit <= 4) return 'месяца';
     return 'месяцев';
 }
 
 // Функция для форматирования срока окупаемости
 function formatPayback(months) {
-    if (months === Infinity || months <= 0) {
-        return '∞ (нет прибыли)';
-    }
+    if (months === Infinity || months <= 0) return '∞ (нет прибыли)';
     
-    // Округляем до целых месяцев
     const totalMonths = Math.round(months);
-    
-    // Переводим в годы и месяцы
     const years = Math.floor(totalMonths / 12);
     const remainingMonths = totalMonths % 12;
     
-    if (years === 0) {
-        // Меньше года
-        return `${totalMonths} ${getMonthsText(totalMonths)}`;
-    } else if (remainingMonths === 0) {
-        // Ровно год/года/лет
-        return `${years} ${getYearsText(years)}`;
-    } else {
-        // Годы и месяцы
-        return `${years} ${getYearsText(years)} ${remainingMonths} ${getMonthsText(remainingMonths)}`;
-    }
+    if (years === 0) return `${totalMonths} ${getMonthsText(totalMonths)}`;
+    if (remainingMonths === 0) return `${years} ${getYearsText(years)}`;
+    return `${years} ${getYearsText(years)} ${remainingMonths} ${getMonthsText(remainingMonths)}`;
 }
 
 // Функция для закрытия клавиатуры
@@ -92,9 +63,7 @@ function dismissKeyboard() {
         hiddenInput.style.opacity = '0';
         document.body.appendChild(hiddenInput);
         hiddenInput.focus();
-        setTimeout(() => {
-            hiddenInput.remove();
-        }, 100);
+        setTimeout(() => hiddenInput.remove(), 100);
     }
     
     keyboardVisible = false;
@@ -115,29 +84,14 @@ function vibrate(pattern = 'light') {
     
     try {
         switch(pattern) {
-            case 'light':
-                Telegram.WebApp.HapticFeedback.impactOccurred('light');
-                break;
-            case 'medium':
-                Telegram.WebApp.HapticFeedback.impactOccurred('medium');
-                break;
-            case 'heavy':
-                Telegram.WebApp.HapticFeedback.impactOccurred('heavy');
-                break;
-            case 'success':
-                Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-                break;
-            case 'error':
-                Telegram.WebApp.HapticFeedback.notificationOccurred('error');
-                break;
-            case 'warning':
-                Telegram.WebApp.HapticFeedback.notificationOccurred('warning');
-                break;
-            case 'selection':
-                Telegram.WebApp.HapticFeedback.selectionChanged();
-                break;
-            default:
-                Telegram.WebApp.HapticFeedback.impactOccurred('light');
+            case 'light': Telegram.WebApp.HapticFeedback.impactOccurred('light'); break;
+            case 'medium': Telegram.WebApp.HapticFeedback.impactOccurred('medium'); break;
+            case 'heavy': Telegram.WebApp.HapticFeedback.impactOccurred('heavy'); break;
+            case 'success': Telegram.WebApp.HapticFeedback.notificationOccurred('success'); break;
+            case 'error': Telegram.WebApp.HapticFeedback.notificationOccurred('error'); break;
+            case 'warning': Telegram.WebApp.HapticFeedback.notificationOccurred('warning'); break;
+            case 'selection': Telegram.WebApp.HapticFeedback.selectionChanged(); break;
+            default: Telegram.WebApp.HapticFeedback.impactOccurred('light');
         }
     } catch (e) {
         console.log('Haptic feedback error:', e);
@@ -167,9 +121,7 @@ async function loadStations() {
                 subsidy: row[7] === 'Да' || row[7] === 'да' || row[7] === 'TRUE'
             }));
             
-            // Обновляем селект с пустым значением по умолчанию
-            updateModelSelect(true); // true = оставить пустым
-            
+            updateModelSelect(true);
             highlightActiveType('ac');
             vibrate('success');
         }
@@ -203,14 +155,13 @@ function updateModelSelect(keepEmpty = false) {
     });
     
     if (!keepEmpty && filtered.length > 0) {
-        // Если не нужно оставлять пустым, выбираем первую станцию
         select.value = filtered[0].id;
         updateStationInfo();
     } else {
-        // Оставляем пустым
         select.value = '';
         selectedStation = null;
         document.getElementById('subsidyInfo').style.display = 'none';
+        document.getElementById('subsidyCheckboxContainer').style.display = 'none';
         document.getElementById('results').innerHTML = '<div class="info-message">👆 Выберите модель станции для расчета</div>';
     }
 }
@@ -223,19 +174,35 @@ function updateStationInfo() {
     if (!stationId) {
         selectedStation = null;
         document.getElementById('subsidyInfo').style.display = 'none';
+        document.getElementById('subsidyCheckboxContainer').style.display = 'none';
         document.getElementById('results').innerHTML = '<div class="info-message">👆 Выберите модель станции для расчета</div>';
         return;
     }
     
     selectedStation = stations.find(s => s.id == stationId);
     
+    // Показываем информацию о субсидии из таблицы
     if (selectedStation && selectedStation.subsidy) {
         document.getElementById('subsidyInfo').style.display = 'block';
-        vibrate('light');
     } else {
         document.getElementById('subsidyInfo').style.display = 'none';
     }
     
+    // Показываем чекбокс субсидии 50% только для станции 160 кВт
+    if (selectedStation && selectedStation.name.includes('160')) {
+        document.getElementById('subsidyCheckboxContainer').style.display = 'block';
+    } else {
+        document.getElementById('subsidyCheckboxContainer').style.display = 'none';
+        subsidyApplied = false; // Сбрасываем флаг
+    }
+    
+    calculate();
+}
+
+// Переключение субсидии 50%
+function toggleSubsidy(checked) {
+    subsidyApplied = checked;
+    vibrate('light');
     calculate();
 }
 
@@ -245,11 +212,8 @@ function setType(type) {
     
     currentType = type;
     vibrate('medium');
-    
     highlightActiveType(type);
-    
-    // При смене типа сбрасываем выбор станции
-    updateModelSelect(true); // true = оставляем пустым
+    updateModelSelect(true);
 }
 
 // Обновить значение часов
@@ -260,13 +224,11 @@ function updateHours() {
     clearTimeout(window.hoursTimer);
     window.hoursTimer = setTimeout(() => {
         vibrate('light');
-        if (selectedStation) {
-            calculate();
-        }
+        if (selectedStation) calculate();
     }, 50);
 }
 
-// Расчет проданной энергии с детализацией
+// 🎯 ПРАВИЛЬНЫЙ РАСЧЕТ ЭНЕРГИИ (новая логика)
 function calculateEnergyDetails(hours, station) {
     let details = {
         total: 0,
@@ -276,81 +238,82 @@ function calculateEnergyDetails(hours, station) {
     
     if (currentType === 'ac') {
         if (station.name.includes('001')) {
-            details.total = CONFIG.AC_REAL_SPEED * hours;
-            details.mode = 'Одна машина постоянно';
+            // 001 - 1 машина, 7.5 кВт
+            const speed = CONFIG.AC_REAL_SPEED; // 7.5
+            details.total = speed * hours;
+            details.mode = 'Одна машина';
             details.breakdown.push({
-                period: 'Весь день',
-                speed: CONFIG.AC_REAL_SPEED,
+                speed: speed,
                 hours: hours,
-                energy: CONFIG.AC_REAL_SPEED * hours
+                energy: speed * hours
             });
         } else if (station.name.includes('002')) {
-            if (hours <= 12) {
-                details.total = CONFIG.AC_REAL_SPEED * hours;
-                details.mode = 'Одна машина';
-                details.breakdown.push({
-                    period: 'Весь день',
-                    speed: CONFIG.AC_REAL_SPEED,
-                    hours: hours,
-                    energy: CONFIG.AC_REAL_SPEED * hours
-                });
-            } else {
-                const energyFirst = CONFIG.AC_REAL_SPEED * 12;
-                const energySecond = CONFIG.AC_REAL_SPEED * 2 * (hours - 12);
-                details.total = energyFirst + energySecond;
-                details.mode = 'Смешанный режим';
-                details.breakdown.push({
-                    period: '0-12 часов (1 машина)',
-                    speed: CONFIG.AC_REAL_SPEED,
-                    hours: 12,
-                    energy: energyFirst
-                });
-                details.breakdown.push({
-                    period: `${12}-${hours} часов (2 машины)`,
-                    speed: CONFIG.AC_REAL_SPEED * 2,
-                    hours: hours - 12,
-                    energy: energySecond
-                });
-            }
+            // 002 - 2 машины, каждая по 7.5 кВт
+            const speed = CONFIG.AC_REAL_SPEED * 2; // 15 кВт суммарно
+            details.total = speed * hours;
+            details.mode = 'Две машины одновременно';
+            details.breakdown.push({
+                speed: speed,
+                hours: hours,
+                energy: speed * hours
+            });
         }
     } else { // DC
-        if (station.power <= 40) {
+        if (station.name.includes('40') && station.power <= 40) {
+            // 40 кВт - одна машина
             details.total = station.power * hours;
-            details.mode = 'Полная мощность';
+            details.mode = 'Одна машина 40 кВт';
             details.breakdown.push({
-                period: 'Весь день',
                 speed: station.power,
                 hours: hours,
                 energy: station.power * hours
             });
-        } else {
-            if (hours <= 12) {
-                details.total = CONFIG.DC_MAX_SPEED * hours;
-                details.mode = 'Одна машина (60 кВт)';
-                details.breakdown.push({
-                    period: 'Весь день',
-                    speed: CONFIG.DC_MAX_SPEED,
-                    hours: hours,
-                    energy: CONFIG.DC_MAX_SPEED * hours
-                });
-            } else {
-                const energyFirst = CONFIG.DC_MAX_SPEED * 12;
-                const energySecond = CONFIG.DC_DUAL_SPEED * 2 * (hours - 12);
-                details.total = energyFirst + energySecond;
-                details.mode = 'Смешанный режим';
-                details.breakdown.push({
-                    period: '0-12 часов (1 машина, 60 кВт)',
-                    speed: CONFIG.DC_MAX_SPEED,
-                    hours: 12,
-                    energy: energyFirst
-                });
-                details.breakdown.push({
-                    period: `${12}-${hours} часов (2 машины по 40 кВт)`,
-                    speed: CONFIG.DC_DUAL_SPEED * 2,
-                    hours: hours - 12,
-                    energy: energySecond
-                });
-            }
+        } 
+        else if (station.name.includes('80')) {
+            // 80 кВт - две машины по 40 кВт
+            const speedPerCar = 40;
+            const totalSpeed = speedPerCar * 2; // 80 кВт
+            details.total = totalSpeed * hours;
+            details.mode = 'Две машины по 40 кВт';
+            details.breakdown.push({
+                speed: totalSpeed,
+                hours: hours,
+                energy: totalSpeed * hours
+            });
+        }
+        else if (station.name.includes('120')) {
+            // 120 кВт - две машины по 60 кВт
+            const speedPerCar = 60;
+            const totalSpeed = speedPerCar * 2; // 120 кВт
+            details.total = totalSpeed * hours;
+            details.mode = 'Две машины по 60 кВт';
+            details.breakdown.push({
+                speed: totalSpeed,
+                hours: hours,
+                energy: totalSpeed * hours
+            });
+        }
+        else if (station.name.includes('160')) {
+            // 160 кВт - две машины по 60 кВт (ограничение)
+            const speedPerCar = 60;
+            const totalSpeed = speedPerCar * 2; // 120 кВт (не 160!)
+            details.total = totalSpeed * hours;
+            details.mode = 'Две машины по 60 кВт (макс)';
+            details.breakdown.push({
+                speed: totalSpeed,
+                hours: hours,
+                energy: totalSpeed * hours
+            });
+        }
+        else {
+            // На всякий случай, если модель не определена
+            details.total = station.power * hours;
+            details.mode = 'Стандартный режим';
+            details.breakdown.push({
+                speed: station.power,
+                hours: hours,
+                energy: station.power * hours
+            });
         }
     }
     
@@ -372,6 +335,12 @@ function calculate() {
     const energyDetails = calculateEnergyDetails(hours, selectedStation);
     const energyPerDay = energyDetails.total;
     
+    // Цена станции с учетом субсидии 50% (только для 160 кВт)
+    let stationPrice = selectedStation.price;
+    if (selectedStation.name.includes('160') && subsidyApplied) {
+        stationPrice = stationPrice * 0.5; // Скидка 50%
+    }
+    
     const revenuePerDay = energyPerDay * clientPrice;
     
     const efficiency = currentType === 'dc' ? CONFIG.EFFICIENCY.DC : CONFIG.EFFICIENCY.AC;
@@ -390,7 +359,7 @@ function calculate() {
     const internetMonth = CONFIG.INTERNET_COST * stationCount;
     const profitMonth = profitPerDay * 30 * stationCount;
     
-    const totalCost = selectedStation.price * stationCount;
+    const totalCost = stationPrice * stationCount;
     let paybackMonths = profitMonth > 0 ? totalCost / profitMonth : Infinity;
     let paybackText = formatPayback(paybackMonths);
     
@@ -398,15 +367,14 @@ function calculate() {
         return Math.round(num).toLocaleString() + ' ₽';
     };
     
-    // Функция для форматирования энергии
     const formatEnergy = (num) => {
         return Math.round(num).toLocaleString() + ' кВт';
     };
     
-    // Формируем HTML для детализации энергии С УЧЕТОМ КОЛИЧЕСТВА СТАНЦИЙ
+    // Детализация с учетом количества станций
     let energyBreakdownHtml = '';
     energyDetails.breakdown.forEach(item => {
-        const energyForAllStations = item.energy * stationCount; // УМНОЖАЕМ НА КОЛИЧЕСТВО СТАНЦИЙ
+        const energyForAllStations = item.energy * stationCount;
         energyBreakdownHtml += `
             <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px; padding-left: 12px; border-left: 2px solid #007AFF;">
                 <span style="color: #666;">${item.speed} кВт × ${item.hours}ч × ${stationCount} шт</span>
@@ -414,6 +382,11 @@ function calculate() {
             </div>
         `;
     });
+    
+    // Информация о субсидии для отображения
+    const subsidyText = (selectedStation.name.includes('160') && subsidyApplied) 
+        ? `<div style="margin-top: 8px; font-size: 13px; color: #34C759; background: #e8f5e9; padding: 8px 12px; border-radius: 12px;">✨ Применена субсидия 50% - цена станции ${formatMoney(stationPrice)}</div>` 
+        : '';
     
     document.getElementById('results').innerHTML = `
         <div class="result-grid">
@@ -445,8 +418,11 @@ function calculate() {
                 <h3 style="font-size: 16px; font-weight: 600; color: #1a1a1a;">Детализация по энергии</h3>
             </div>
             
-            <!-- ТОЛЬКО ЦИФРЫ, С УЧЕТОМ КОЛИЧЕСТВА СТАНЦИЙ -->
             <div style="margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px; padding: 0 4px;">
+                    <span style="color: #666;">Режим:</span>
+                    <span style="font-weight: 600; color: #007AFF;">${energyDetails.mode}</span>
+                </div>
                 ${energyBreakdownHtml}
             </div>
             
@@ -474,6 +450,8 @@ function calculate() {
             </div>
         </div>
         
+        ${subsidyText}
+        
         <div style="margin-top: 24px;">
             <div style="font-size: 15px; color: #666; margin-bottom: 8px; font-weight: 500;">⏱️ Срок окупаемости</div>
             <div class="payback-badge">${paybackText}</div>
@@ -490,7 +468,6 @@ function calculate() {
 
 // Логика клавиатуры
 document.addEventListener('DOMContentLoaded', function() {
-    // Вибрация при изменении полей
     document.getElementById('stationCount').addEventListener('change', function() {
         vibrate('light');
         if (selectedStation) calculate();
@@ -506,62 +483,36 @@ document.addEventListener('DOMContentLoaded', function() {
         if (selectedStation) calculate();
     });
     
-    // Отслеживаем фокус на полях ввода
     const inputs = document.querySelectorAll('input, select');
     inputs.forEach(input => {
-        input.addEventListener('focus', function() {
-            keyboardVisible = true;
-        });
-        
-        input.addEventListener('blur', function() {
+        input.addEventListener('focus', () => keyboardVisible = true);
+        input.addEventListener('blur', () => {
             setTimeout(() => {
-                if (document.activeElement && 
-                    (document.activeElement.tagName === 'INPUT' || 
-                     document.activeElement.tagName === 'SELECT')) {
-                    keyboardVisible = true;
-                } else {
-                    keyboardVisible = false;
-                }
+                keyboardVisible = document.activeElement && 
+                    (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT');
             }, 100);
         });
     });
     
-    // Закрытие клавиатуры при клике не на поля ввода
-    document.addEventListener('mousedown', function(e) {
+    const closeKeyboardHandler = (e) => {
         const isInput = e.target.tagName === 'INPUT' || 
                        e.target.tagName === 'SELECT' || 
                        e.target.closest('input') || 
                        e.target.closest('select') ||
                        e.target.closest('.input-field') ||
                        e.target.closest('.select-box') ||
-                       e.target.closest('.label');
+                       e.target.closest('.label') ||
+                       e.target.closest('.checkbox-container');
         
         if (!isInput && keyboardVisible) {
-            setTimeout(() => {
-                dismissKeyboard();
-            }, 50);
+            setTimeout(dismissKeyboard, 50);
         }
-    });
+    };
     
-    document.addEventListener('touchstart', function(e) {
-        const isInput = e.target.tagName === 'INPUT' || 
-                       e.target.tagName === 'SELECT' || 
-                       e.target.closest('input') || 
-                       e.target.closest('select') ||
-                       e.target.closest('.input-field') ||
-                       e.target.closest('.select-box') ||
-                       e.target.closest('.label');
-        
-        if (!isInput && keyboardVisible) {
-            setTimeout(() => {
-                dismissKeyboard();
-            }, 50);
-        }
-    });
+    document.addEventListener('mousedown', closeKeyboardHandler);
+    document.addEventListener('touchstart', closeKeyboardHandler);
     
     highlightActiveType('ac');
-    
-    // Загружаем данные
     loadStations();
 });
 

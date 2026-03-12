@@ -9,10 +9,39 @@ if (window.Telegram && Telegram.WebApp) {
     Telegram.WebApp.expand();
 }
 
+// Функция для закрытия клавиатуры
+function dismissKeyboard() {
+    // Способ 1: убираем фокус со всех полей
+    if (document.activeElement && document.activeElement.blur) {
+        document.activeElement.blur();
+    }
+    
+    // Способ 2: для iOS - создаем скрытое поле и фокусимся на нем
+    if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+        const hiddenInput = document.createElement('input');
+        hiddenInput.style.position = 'absolute';
+        hiddenInput.style.top = '-1000px';
+        hiddenInput.style.left = '-1000px';
+        hiddenInput.style.height = '0';
+        hiddenInput.style.opacity = '0';
+        document.body.appendChild(hiddenInput);
+        hiddenInput.focus();
+        setTimeout(() => {
+            hiddenInput.remove();
+        }, 100);
+    }
+    
+    // Способ 3: для Telegram Mini App
+    if (window.Telegram && Telegram.WebApp) {
+        Telegram.WebApp.MainButton.hide(); // Если есть кнопка
+    }
+    
+    vibrate('light'); // Легкая вибрация при закрытии
+}
+
 // Функция вибрации
 function vibrate(pattern = 'light') {
     if (!window.Telegram || !Telegram.WebApp || !Telegram.WebApp.HapticFeedback) {
-        // Если нет Telegram WebApp, пробуем нативную вибрацию
         if (window.navigator && window.navigator.vibrate) {
             if (pattern === 'light') window.navigator.vibrate(10);
             else if (pattern === 'medium') window.navigator.vibrate(20);
@@ -23,7 +52,6 @@ function vibrate(pattern = 'light') {
         return;
     }
     
-    // Используем Telegram Haptic Feedback
     try {
         switch(pattern) {
             case 'light':
@@ -64,7 +92,6 @@ async function loadStations() {
         const data = await response.json();
         
         if (data.values) {
-            // Пропускаем заголовки (первая строка)
             stations = data.values.slice(1).map(row => ({
                 id: row[0],
                 type: row[1].toLowerCase(),
@@ -77,12 +104,12 @@ async function loadStations() {
             }));
             
             updateModelSelect();
-            vibrate('success'); // Вибрация при успешной загрузке
+            vibrate('success');
         }
     } catch (error) {
         console.error('Ошибка загрузки:', error);
         document.getElementById('modelSelect').innerHTML = '<option value="">Ошибка загрузки</option>';
-        vibrate('error'); // Вибрация при ошибке
+        vibrate('error');
     }
 }
 
@@ -118,10 +145,9 @@ function updateStationInfo() {
     
     selectedStation = stations.find(s => s.id == stationId);
     
-    // Показываем информацию о субсидии
     if (selectedStation && selectedStation.subsidy) {
         document.getElementById('subsidyInfo').style.display = 'block';
-        vibrate('light'); // Легкая вибрация при появлении субсидии
+        vibrate('light');
     } else {
         document.getElementById('subsidyInfo').style.display = 'none';
     }
@@ -131,12 +157,11 @@ function updateStationInfo() {
 
 // Установить тип станции (AC/DC)
 function setType(type) {
-    if (type === currentType) return; // Не вибрируем если тот же тип
+    if (type === currentType) return;
     
     currentType = type;
-    vibrate('medium'); // Вибрация при переключении типа
+    vibrate('medium');
     
-    // Обновляем активную кнопку
     document.querySelectorAll('.type-btn').forEach(btn => {
         btn.classList.remove('active');
     });
@@ -152,7 +177,6 @@ function updateHours() {
     const hours = document.getElementById('hoursSlider').value;
     document.getElementById('hoursValue').textContent = hours + ' часов';
     
-    // Легкая вибрация при изменении слайдера (с задержкой, чтобы не спамить)
     clearTimeout(window.hoursTimer);
     window.hoursTimer = setTimeout(() => {
         vibrate('light');
@@ -170,7 +194,6 @@ function calculateEnergyDetails(hours, station) {
     
     if (currentType === 'ac') {
         if (station.name.includes('001')) {
-            // Серия 001: всегда 7.5 кВт
             details.total = CONFIG.AC_REAL_SPEED * hours;
             details.mode = 'Одна машина постоянно';
             details.breakdown.push({
@@ -180,7 +203,6 @@ function calculateEnergyDetails(hours, station) {
                 energy: CONFIG.AC_REAL_SPEED * hours
             });
         } else if (station.name.includes('002')) {
-            // Серия 002: до 12ч - 1 машина, после - 2 машины
             if (hours <= 12) {
                 details.total = CONFIG.AC_REAL_SPEED * hours;
                 details.mode = 'Одна машина';
@@ -211,7 +233,6 @@ function calculateEnergyDetails(hours, station) {
         }
     } else { // DC
         if (station.power <= 40) {
-            // DC 40 кВт
             details.total = station.power * hours;
             details.mode = 'Полная мощность';
             details.breakdown.push({
@@ -221,7 +242,6 @@ function calculateEnergyDetails(hours, station) {
                 energy: station.power * hours
             });
         } else {
-            // DC 80+ кВт
             if (hours <= 12) {
                 details.total = CONFIG.DC_MAX_SPEED * hours;
                 details.mode = 'Одна машина (60 кВт)';
@@ -262,48 +282,37 @@ function calculate() {
         return;
     }
     
-    // Получаем значения из формы
     const hours = parseFloat(document.getElementById('hoursSlider').value);
     const stationCount = parseInt(document.getElementById('stationCount').value) || 1;
     const costPrice = parseFloat(document.getElementById('costPrice').value) || 0;
     const clientPrice = parseFloat(document.getElementById('clientPrice').value) || 0;
     
-    // Детальный расчет энергии
     const energyDetails = calculateEnergyDetails(hours, selectedStation);
     const energyPerDay = energyDetails.total;
     
-    // Выручка в день
     const revenuePerDay = energyPerDay * clientPrice;
     
-    // Затраты на ЭЭ с учетом КПД
     const efficiency = currentType === 'dc' ? CONFIG.EFFICIENCY.DC : CONFIG.EFFICIENCY.AC;
     const energyConsumed = energyPerDay / efficiency;
-    const energyLoss = energyConsumed - energyPerDay; // Потери на КПД
+    const energyLoss = energyConsumed - energyPerDay;
     const energyCostPerDay = energyConsumed * costPrice;
     
-    // Комиссия ПО
     const commissionPerDay = revenuePerDay * CONFIG.COMMISSION;
-    
-    // Интернет в день
     const internetPerDay = CONFIG.INTERNET_COST / 30;
     
-    // Чистая прибыль в день (одна станция)
     const profitPerDay = revenuePerDay - energyCostPerDay - commissionPerDay - internetPerDay;
     
-    // Месячные показатели для всей сети
     const revenueMonth = revenuePerDay * 30 * stationCount;
     const energyCostMonth = energyCostPerDay * 30 * stationCount;
     const commissionMonth = commissionPerDay * 30 * stationCount;
     const internetMonth = CONFIG.INTERNET_COST * stationCount;
     const profitMonth = profitPerDay * 30 * stationCount;
     
-    // Окупаемость
     const totalCost = selectedStation.price * stationCount;
     let paybackMonths = profitMonth > 0 ? totalCost / profitMonth : Infinity;
     let paybackText = profitMonth <= 0 ? '∞ (нет прибыли)' : 
         `${paybackMonths.toFixed(1)} мес (${(paybackMonths/12).toFixed(1)} лет)`;
     
-    // Форматирование чисел
     const formatMoney = (num) => {
         return Math.round(num).toLocaleString() + ' ₽';
     };
@@ -312,7 +321,6 @@ function calculate() {
         return Math.round(num).toLocaleString() + ' кВт·ч';
     };
     
-    // Создаем HTML для детализации энергии
     let energyBreakdownHtml = '';
     energyDetails.breakdown.forEach(item => {
         energyBreakdownHtml += `
@@ -323,7 +331,6 @@ function calculate() {
         `;
     });
     
-    // Отображаем результаты
     document.getElementById('results').innerHTML = `
         <div class="result-grid">
             <div class="result-item">
@@ -348,7 +355,6 @@ function calculate() {
             </div>
         </div>
         
-        <!-- Детальная статистика по энергии -->
         <div class="energy-detail">
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
                 <span style="font-size: 20px;">🔋</span>
@@ -399,35 +405,71 @@ function calculate() {
         </div>
     `;
     
-    // Вибрация при расчете (medium)
     vibrate('medium');
 }
 
-// Добавляем вибрацию на все инпуты
+// *** ГЛАВНОЕ: ЗАКРЫТИЕ КЛАВИАТУРЫ ПРИ ТАПЕ ВНЕ ПОЛЕЙ ***
 document.addEventListener('DOMContentLoaded', function() {
-    // Вибрация при изменении количества станций
+    // Вибрация при изменении полей
     document.getElementById('stationCount').addEventListener('change', function() {
         vibrate('light');
         calculate();
     });
     
-    // Вибрация при изменении себестоимости
     document.getElementById('costPrice').addEventListener('change', function() {
         vibrate('light');
         calculate();
     });
     
-    // Вибрация при изменении цены для клиента
     document.getElementById('clientPrice').addEventListener('change', function() {
         vibrate('light');
         calculate();
     });
     
-    // Загружаем данные при старте
+    // ЗАКРЫТИЕ КЛАВИАТУРЫ: тап по любому месту
+    document.addEventListener('touchstart', function(e) {
+        // Проверяем, кликнули ли мы по полю ввода
+        const isInput = e.target.tagName === 'INPUT' || 
+                       e.target.tagName === 'SELECT' || 
+                       e.target.closest('input') || 
+                       e.target.closest('select');
+        
+        // Если кликнули НЕ по полю ввода - закрываем клавиатуру
+        if (!isInput) {
+            dismissKeyboard();
+        }
+    });
+    
+    // Также закрываем по клику (для десктопа)
+    document.addEventListener('click', function(e) {
+        const isInput = e.target.tagName === 'INPUT' || 
+                       e.target.tagName === 'SELECT' || 
+                       e.target.closest('input') || 
+                       e.target.closest('select');
+        
+        if (!isInput) {
+            dismissKeyboard();
+        }
+    });
+    
+    // Дополнительно: закрываем клавиатуру при скролле
+    let scrollTimer;
+    window.addEventListener('scroll', function() {
+        clearTimeout(scrollTimer);
+        scrollTimer = setTimeout(() => {
+            if (document.activeElement && 
+                (document.activeElement.tagName === 'INPUT' || 
+                 document.activeElement.tagName === 'SELECT')) {
+                dismissKeyboard();
+            }
+        }, 150);
+    });
+    
+    // Загружаем данные
     loadStations();
 });
 
-// Если пользователь тыкает на субсидию - дополнительная вибрация
+// Вибрация при клике на субсидию
 document.addEventListener('click', function(e) {
     if (e.target.closest('.subsidy-badge')) {
         vibrate('success');

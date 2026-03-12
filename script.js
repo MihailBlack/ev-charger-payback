@@ -273,7 +273,7 @@ function calculateEnergyDetails(hours, station) {
             // 001 - 1 машина, 7.5 кВт
             const speed = CONFIG.AC_REAL_SPEED; // 7.5
             details.total = speed * hours;
-            details.mode = 'Одна машина';
+            details.mode = 'Одна машина (7.5 кВт)';
             details.breakdown.push({
                 speed: speed,
                 hours: hours,
@@ -283,7 +283,7 @@ function calculateEnergyDetails(hours, station) {
             // 002 - 2 машины, каждая по 7.5 кВт
             const speed = CONFIG.AC_REAL_SPEED * 2; // 15 кВт суммарно
             details.total = speed * hours;
-            details.mode = 'Две машины одновременно';
+            details.mode = 'Две машины одновременно (2×7.5 кВт)';
             details.breakdown.push({
                 speed: speed,
                 hours: hours,
@@ -294,7 +294,7 @@ function calculateEnergyDetails(hours, station) {
         if (station.name.includes('40') && station.power <= 40) {
             // 40 кВт - одна машина
             details.total = station.power * hours;
-            details.mode = 'Одна машина 40 кВт';
+            details.mode = 'Одна машина (40 кВт)';
             details.breakdown.push({
                 speed: station.power,
                 hours: hours,
@@ -306,7 +306,7 @@ function calculateEnergyDetails(hours, station) {
             const speedPerCar = 40;
             const totalSpeed = speedPerCar * 2; // 80 кВт
             details.total = totalSpeed * hours;
-            details.mode = 'Две машины по 40 кВт';
+            details.mode = 'Две машины (2×40 кВт)';
             details.breakdown.push({
                 speed: totalSpeed,
                 hours: hours,
@@ -318,7 +318,7 @@ function calculateEnergyDetails(hours, station) {
             const speedPerCar = 60;
             const totalSpeed = speedPerCar * 2; // 120 кВт
             details.total = totalSpeed * hours;
-            details.mode = 'Две машины по 60 кВт';
+            details.mode = 'Две машины (2×60 кВт)';
             details.breakdown.push({
                 speed: totalSpeed,
                 hours: hours,
@@ -326,15 +326,16 @@ function calculateEnergyDetails(hours, station) {
             });
         }
         else if (station.name.includes('160')) {
-            // 160 кВт - две машины по 60 кВт (ограничение)
-            const speedPerCar = 60;
-            const totalSpeed = speedPerCar * 2; // 120 кВт (не 160!)
-            details.total = totalSpeed * hours;
-            details.mode = 'Две машины по 60 кВт (макс)';
+            // 160 кВт - станция мощная, но машины в среднем берут 60 кВт
+            // Поэтому средний расчет: 2 машины по 60 кВт = 120 кВт/ч
+            const avgSpeedPerCar = 60; // Средняя скорость зарядки машин
+            const totalAvgSpeed = avgSpeedPerCar * 2; // 120 кВт средняя нагрузка
+            details.total = totalAvgSpeed * hours;
+            details.mode = 'Две машины (средний расчет 2×60 кВт)';
             details.breakdown.push({
-                speed: totalSpeed,
+                speed: totalAvgSpeed,
                 hours: hours,
-                energy: totalSpeed * hours
+                energy: totalAvgSpeed * hours
             });
         }
         else {

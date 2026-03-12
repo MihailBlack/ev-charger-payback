@@ -2,6 +2,7 @@
 let stations = [];
 let currentType = 'ac';
 let selectedStation = null;
+let keyboardVisible = false; // Флаг: открыта ли клавиатура
 
 // Инициализация Telegram Mini App
 if (window.Telegram && Telegram.WebApp) {
@@ -11,12 +12,11 @@ if (window.Telegram && Telegram.WebApp) {
 
 // Функция для закрытия клавиатуры
 function dismissKeyboard() {
-    // Способ 1: убираем фокус со всех полей
     if (document.activeElement && document.activeElement.blur) {
         document.activeElement.blur();
     }
     
-    // Способ 2: для iOS - создаем скрытое поле и фокусимся на нем
+    // Для iOS
     if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         const hiddenInput = document.createElement('input');
         hiddenInput.style.position = 'absolute';
@@ -31,12 +31,7 @@ function dismissKeyboard() {
         }, 100);
     }
     
-    // Способ 3: для Telegram Mini App
-    if (window.Telegram && Telegram.WebApp) {
-        Telegram.WebApp.MainButton.hide(); // Если есть кнопка
-    }
-    
-    vibrate('light'); // Легкая вибрация при закрытии
+    keyboardVisible = false;
 }
 
 // Функция вибрации
@@ -408,7 +403,7 @@ function calculate() {
     vibrate('medium');
 }
 
-// *** ГЛАВНОЕ: ЗАКРЫТИЕ КЛАВИАТУРЫ ПРИ ТАПЕ ВНЕ ПОЛЕЙ ***
+// *** ИСПРАВЛЕННАЯ ЛОГИКА КЛАВИАТУРЫ ***
 document.addEventListener('DOMContentLoaded', function() {
     // Вибрация при изменении полей
     document.getElementById('stationCount').addEventListener('change', function() {
@@ -426,44 +421,67 @@ document.addEventListener('DOMContentLoaded', function() {
         calculate();
     });
     
-    // ЗАКРЫТИЕ КЛАВИАТУРЫ: тап по любому месту
-    document.addEventListener('touchstart', function(e) {
-        // Проверяем, кликнули ли мы по полю ввода
+    // Отслеживаем фокус на полях ввода
+    const inputs = document.querySelectorAll('input, select');
+    inputs.forEach(input => {
+        input.addEventListener('focus', function() {
+            keyboardVisible = true; // Клавиатура открыта
+        });
+        
+        input.addEventListener('blur', function() {
+            // Даем небольшую задержку, чтобы проверить, не перешел ли фокус на другое поле
+            setTimeout(() => {
+                if (document.activeElement && 
+                    (document.activeElement.tagName === 'INPUT' || 
+                     document.activeElement.tagName === 'SELECT')) {
+                    // Фокус на другом поле - клавиатура все еще открыта
+                    keyboardVisible = true;
+                } else {
+                    keyboardVisible = false; // Клавиатура закрыта
+                }
+            }, 100);
+        });
+    });
+    
+    // ЗАКРЫТИЕ КЛАВИАТУРЫ ТОЛЬКО ПРИ КЛИКЕ НЕ НА ПОЛЯ ВВОДА
+    document.addEventListener('mousedown', function(e) {
+        // Проверяем, кликнули ли мы по полю ввода или его лейблу
         const isInput = e.target.tagName === 'INPUT' || 
                        e.target.tagName === 'SELECT' || 
                        e.target.closest('input') || 
-                       e.target.closest('select');
+                       e.target.closest('select') ||
+                       e.target.closest('.input-field') ||
+                       e.target.closest('.select-box') ||
+                       e.target.closest('.label'); // Лейбл тоже не закрываем клавиатуру
         
-        // Если кликнули НЕ по полю ввода - закрываем клавиатуру
-        if (!isInput) {
-            dismissKeyboard();
-        }
-    });
-    
-    // Также закрываем по клику (для десктопа)
-    document.addEventListener('click', function(e) {
-        const isInput = e.target.tagName === 'INPUT' || 
-                       e.target.tagName === 'SELECT' || 
-                       e.target.closest('input') || 
-                       e.target.closest('select');
-        
-        if (!isInput) {
-            dismissKeyboard();
-        }
-    });
-    
-    // Дополнительно: закрываем клавиатуру при скролле
-    let scrollTimer;
-    window.addEventListener('scroll', function() {
-        clearTimeout(scrollTimer);
-        scrollTimer = setTimeout(() => {
-            if (document.activeElement && 
-                (document.activeElement.tagName === 'INPUT' || 
-                 document.activeElement.tagName === 'SELECT')) {
+        // Если кликнули НЕ по полю ввода И клавиатура открыта - закрываем
+        if (!isInput && keyboardVisible) {
+            // Даем небольшую задержку, чтобы событие focus успело обработаться
+            setTimeout(() => {
                 dismissKeyboard();
-            }
-        }, 150);
+            }, 50);
+        }
     });
+    
+    // Для touch-устройств
+    document.addEventListener('touchstart', function(e) {
+        const isInput = e.target.tagName === 'INPUT' || 
+                       e.target.tagName === 'SELECT' || 
+                       e.target.closest('input') || 
+                       e.target.closest('select') ||
+                       e.target.closest('.input-field') ||
+                       e.target.closest('.select-box') ||
+                       e.target.closest('.label');
+        
+        if (!isInput && keyboardVisible) {
+            setTimeout(() => {
+                dismissKeyboard();
+            }, 50);
+        }
+    });
+    
+    // НЕ закрываем клавиатуру при скролле (иначе раздражает)
+    // Убираем обработчик скролла
     
     // Загружаем данные
     loadStations();

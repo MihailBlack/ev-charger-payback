@@ -6,210 +6,198 @@
 }
 
 body {
-    background-color: #f5f5f5;
-    padding: 16px;
+    background-color: var(--tg-theme-bg-color, #ffffff);
+    color: var(--tg-theme-text-color, #000000);
     min-height: 100vh;
-    display: flex;
-    justify-content: center;
+    padding: 0 16px;
+    /* Отступ сверху для системных кнопок */
+    padding-top: constant(safe-area-inset-top, 48px);
+    padding-top: env(safe-area-inset-top, 48px);
+    padding-bottom: 20px;
 }
 
 .container {
-    max-width: 500px;
-    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
 }
 
-/* Flat дизайн карточки */
-.card {
-    background: white;
-    border-radius: 20px;
-    padding: 20px;
-    margin-bottom: 16px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
-    border: 1px solid #f0f0f0;
+/* Тип станции (переключатель) */
+.section-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--tg-theme-hint-color, #8e8e93);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
 }
 
-h2 {
-    font-size: 18px;
-    font-weight: 600;
-    color: #1a1a1a;
-    margin-bottom: 16px;
-    letter-spacing: -0.3px;
-}
-
-/* Переключатели AC/DC */
 .type-switch {
     display: flex;
-    gap: 12px;
+    background: var(--tg-theme-secondary-bg-color, #f2f2f7);
+    border-radius: 10px;
+    padding: 4px;
     margin-bottom: 20px;
 }
 
 .type-btn {
     flex: 1;
-    padding: 14px;
-    border-radius: 16px;
-    border: 2px solid transparent;
-    background: #f8f8f8;
+    text-align: center;
+    padding: 10px 0;
+    border-radius: 8px;
+    font-weight: 500;
     font-size: 16px;
-    font-weight: 600;
+    border: none;
+    background: transparent;
+    color: var(--tg-theme-text-color, #000000);
     cursor: pointer;
-    transition: all 0.2s ease;
-    color: #666;
+    transition: all 0.2s;
 }
 
 .type-btn.active {
-    background: #007AFF;
-    color: white;
-    border-color: #007AFF;
-}
-
-.type-btn.ac.active { background: #34C759; border-color: #34C759; }
-.type-btn.dc.active { background: #007AFF; border-color: #007AFF; }
-
-/* Выпадающие списки */
-.select-box {
-    width: 100%;
-    padding: 16px;
-    border-radius: 16px;
-    border: 1.5px solid #e8e8e8;
-    background: white;
-    font-size: 15px;
-    margin-bottom: 16px;
-    appearance: none;
-    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-    background-repeat: no-repeat;
-    background-position: right 16px center;
-    background-size: 18px;
-}
-
-/* Поля ввода */
-.input-field {
-    width: 100%;
-    padding: 16px;
-    border-radius: 16px;
-    border: 1.5px solid #e8e8e8;
-    font-size: 15px;
-    margin-bottom: 16px;
-    transition: border-color 0.2s;
-}
-
-.input-field:focus {
-    outline: none;
-    border-color: #007AFF;
-}
-
-.label {
-    font-size: 14px;
-    font-weight: 500;
-    color: #666;
-    margin-bottom: 6px;
-    display: block;
-}
-
-/* Слайдер для часов */
-.slider-container {
-    margin-bottom: 24px;
-}
-
-.slider-value {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
-}
-
-.slider-value span:first-child {
-    color: #666;
-    font-size: 14px;
-}
-
-.slider-value span:last-child {
-    background: #f0f0f0;
-    padding: 6px 12px;
-    border-radius: 30px;
-    font-weight: 600;
-    font-size: 16px;
-}
-
-input[type=range] {
-    width: 100%;
-    height: 6px;
-    border-radius: 10px;
-    background: #e0e0e0;
-    -webkit-appearance: none;
-}
-
-input[type=range]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 24px;
-    height: 24px;
-    background: white;
-    border-radius: 50%;
+    background: var(--tg-theme-button-color, #007aff);
+    color: var(--tg-theme-button-text-color, #ffffff);
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    border: 2px solid #007AFF;
-    cursor: pointer;
-    margin-top: -9px;
 }
 
-/* Карточки результатов */
-.result-grid {
-    display: grid;
-    gap: 12px;
-}
-
-.result-item {
-    background: #f8f8f8;
-    border-radius: 16px;
+/* Карточка станции */
+.station-card {
+    background: var(--tg-theme-secondary-bg-color, #f2f2f7);
+    border-radius: 12px;
     padding: 16px;
+    margin-bottom: 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
-.result-label {
-    color: #666;
+.station-info h2 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.station-price {
+    font-size: 15px;
+    color: var(--tg-theme-hint-color, #8e8e93);
+}
+
+.station-select {
+    background: var(--tg-theme-bg-color, #ffffff);
+    border: 1px solid var(--tg-theme-hint-color, #c6c6c8);
+    border-radius: 8px;
+    padding: 8px 12px;
     font-size: 14px;
+    color: var(--tg-theme-text-color, #000000);
+    outline: none;
 }
 
-.result-value {
+/* Параметры расчета */
+.params-title {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 16px;
+}
+
+.param-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.param-label {
+    font-size: 15px;
+    color: var(--tg-theme-hint-color, #8e8e93);
+}
+
+.param-input {
+    background: var(--tg-theme-secondary-bg-color, #f2f2f7);
+    border: none;
+    border-radius: 10px;
+    padding: 10px 14px;
+    width: 120px;
+    text-align: right;
+    font-size: 15px;
+    color: var(--tg-theme-text-color, #000000);
+    outline: none;
+}
+
+.param-input:focus {
+    box-shadow: 0 0 0 2px var(--tg-theme-button-color, #007aff);
+}
+
+/* Результаты */
+.results {
+    background: var(--tg-theme-secondary-bg-color, #f2f2f7);
+    border-radius: 16px;
+    padding: 20px;
+    margin-top: 24px;
+}
+
+.result-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--tg-theme-hint-color, #8e8e93);
+    margin-bottom: 4px;
+    text-transform: uppercase;
+}
+
+.result-main {
+    font-size: 32px;
     font-weight: 700;
-    font-size: 18px;
-    color: #1a1a1a;
+    color: var(--tg-theme-text-color, #000000);
+    margin-bottom: 4px;
 }
 
-.result-value.positive {
-    color: #34C759;
+.result-sub {
+    font-size: 14px;
+    color: var(--tg-theme-hint-color, #8e8e93);
+    margin-bottom: 20px;
+}
+
+.result-details {
+    display: flex;
+    justify-content: space-between;
+    padding-top: 16px;
+    border-top: 1px solid var(--tg-theme-hint-color, #c6c6c8);
+}
+
+.detail-item {
+    flex: 1;
+    text-align: center;
+}
+
+.detail-label {
+    font-size: 12px;
+    color: var(--tg-theme-hint-color, #8e8e93);
+    margin-bottom: 4px;
+}
+
+.detail-value {
+    font-size: 16px;
+    font-weight: 600;
 }
 
 .payback-badge {
-    background: #34C759;
-    color: white;
-    padding: 12px 20px;
-    border-radius: 40px;
-    font-weight: 700;
-    font-size: 20px;
+    background: var(--tg-theme-button-color, #007aff);
+    color: var(--tg-theme-button-text-color, #ffffff);
+    padding: 12px 16px;
+    border-radius: 12px;
     text-align: center;
-    margin-top: 8px;
-}
-
-.subsidy-badge {
-    background: #FFD60A;
-    color: #1a1a1a;
-    padding: 8px 16px;
-    border-radius: 30px;
-    font-size: 13px;
+    font-size: 18px;
     font-weight: 600;
-    display: inline-block;
-    margin-left: 8px;
+    margin-top: 16px;
 }
 
-.loading {
-    text-align: center;
-    color: #666;
-    padding: 20px;
+.payback-badge span {
+    font-size: 14px;
+    font-weight: 400;
+    opacity: 0.9;
 }
 
-.error {
-    color: #FF3B30;
+.footnote {
+    font-size: 11px;
+    color: var(--tg-theme-hint-color, #8e8e93);
+    margin-top: 8px;
     text-align: center;
-    padding: 20px;
 }

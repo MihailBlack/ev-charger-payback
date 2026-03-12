@@ -1,62 +1,80 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Калькулятор окупаемости ЗС</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Калькулятор окупаемости</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
-        <!-- Карточка выбора типа -->
-        <div class="card">
-            <h2>⚡ Тип станции</h2>
-            <div class="type-switch">
-                <button class="type-btn ac" onclick="setType('ac')">AC</button>
-                <button class="type-btn dc" onclick="setType('dc')">DC</button>
+        <!-- Тип станции -->
+        <div class="section-label">ТИП СТАНЦИИ</div>
+        <div class="type-switch">
+            <button class="type-btn active" data-type="ac" id="btnAC">AC</button>
+            <button class="type-btn" data-type="dc" id="btnDC">DC</button>
+        </div>
+        
+        <!-- Карточка выбора модели -->
+        <div class="station-card">
+            <div class="station-info">
+                <h2 id="stationName">Серия 001 Бизнес</h2>
+                <div class="station-price" id="stationPrice">150 000 ₽</div>
             </div>
-            
-            <select id="modelSelect" class="select-box" onchange="updateStationInfo()">
-                <option value="">Загрузка моделей...</option>
+            <select class="station-select" id="stationSelect">
+                <option value="150000" data-name="Серия 001 Бизнес" data-power="22" selected>Серия 001 Бизнес</option>
+                <option value="350000" data-name="Серия 002 Комфорт" data-power="50">Серия 002 Комфорт</option>
+                <option value="800000" data-name="Серия 003 Премиум" data-power="150">Серия 003 Премиум</option>
             </select>
-            
-            <div id="subsidyInfo" style="display: none; margin-top: 8px;">
-                <span class="subsidy-badge">✨ Возможна субсидия</span>
-            </div>
         </div>
         
-        <!-- Карточка параметров -->
-        <div class="card">
-            <h2>📊 Параметры расчета</h2>
+        <!-- Параметры расчета -->
+        <div class="params-title">Параметры расчета</div>
+        
+        <div class="param-row">
+            <span class="param-label">Количество станций в сети</span>
+            <input type="number" class="param-input" id="stationsCount" value="1" min="1" step="1">
+        </div>
+        
+        <div class="param-row">
+            <span class="param-label">Загрузка в день</span>
+            <input type="number" class="param-input" id="loadHours" value="12" min="0" max="24" step="0.5">
+        </div>
+        
+        <div class="param-row">
+            <span class="param-label">Себестоимость ЭЭ (₽/кВт·ч)</span>
+            <input type="number" class="param-input" id="energyCost" value="5" min="0" step="0.1">
+        </div>
+        
+        <div class="param-row">
+            <span class="param-label">Цена для клиента (₽/кВт·ч)</span>
+            <input type="number" class="param-input" id="clientPrice" value="15" min="0" step="0.1">
+        </div>
+        
+        <!-- Результаты -->
+        <div class="results">
+            <div class="result-title">РЕЗУЛЬТАТЫ</div>
+            <div class="result-main" id="monthlyRevenue">40 500 ₽</div>
+            <div class="result-sub" id="monthlyRevenueDetail">выручка в месяц</div>
             
-            <label class="label">Количество станций в сети</label>
-            <input type="number" id="stationCount" class="input-field" min="1" value="1" onchange="calculate()">
-            
-            <div class="slider-container">
-                <div class="slider-value">
-                    <span>Загрузка в день</span>
-                    <span id="hoursValue">12 часов</span>
+            <div class="result-details">
+                <div class="detail-item">
+                    <div class="detail-label" id="profitLabel">Прибыль</div>
+                    <div class="detail-value" id="monthlyProfit">35 600 ₽</div>
                 </div>
-                <input type="range" id="hoursSlider" min="0" max="24" value="12" step="1" oninput="updateHours()" onchange="calculate()">
+                <div class="detail-item">
+                    <div class="detail-label">ROI</div>
+                    <div class="detail-value" id="roi">28%</div>
+                </div>
             </div>
             
-            <label class="label">Себестоимость ЭЭ (₽/кВт·ч)</label>
-            <input type="number" id="costPrice" class="input-field" min="0" step="0.1" value="5" onchange="calculate()">
-            
-            <label class="label">Цена для клиента (₽/кВт·ч)</label>
-            <input type="number" id="clientPrice" class="input-field" min="0" step="0.1" value="15" onchange="calculate()">
-        </div>
-        
-        <!-- Карточка результатов -->
-        <div class="card">
-            <h2>📈 Результаты</h2>
-            <div id="results">
-                <div class="loading">Введите данные для расчета</div>
+            <div class="payback-badge" id="paybackPeriod">
+                4.2 года <span>окупаемость</span>
             </div>
         </div>
     </div>
 
-    <script src="config.js"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

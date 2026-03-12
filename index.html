@@ -20,8 +20,12 @@
                 <option value="">Загрузка моделей...</option>
             </select>
             
-            <div id="subsidyInfo" style="display: none; margin-top: 8px;">
-                <span class="subsidy-badge">✨ Возможна субсидия</span>
+            <!-- Чекбокс для субсидии 50% на станцию 160 кВт -->
+            <div id="subsidyCheckboxContainer" class="checkbox-container" style="display: none; margin-top: 16px;">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="subsidyCheckbox" onchange="toggleSubsidy(this.checked)">
+                    <span>💰 Применить субсидию 50% (только для 160 кВт)</span>
+                </label>
             </div>
         </div>
         

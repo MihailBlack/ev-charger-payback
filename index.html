@@ -8,23 +8,28 @@
 </head>
 <body>
     <div class="container">
-        <!-- Тип станции -->
-        <div class="section-label">ТИП СТАНЦИИ</div>
-        <div class="type-switch">
-            <button class="type-btn active" data-type="ac" id="btnAC">AC</button>
-            <button class="type-btn" data-type="dc" id="btnDC">DC</button>
+        <!-- Тип станции с крестиком -->
+        <div class="header">
+            <span class="section-label">ТИП СТАНЦИИ</span>
+            <button class="close-btn" onclick="window.Telegram.WebApp.close()">✕</button>
         </div>
         
-        <!-- Карточка выбора модели -->
+        <!-- Переключатель AC/DC -->
+        <div class="type-switch">
+            <button class="type-btn active" id="btnAC">AC</button>
+            <button class="type-btn" id="btnDC">DC</button>
+        </div>
+        
+        <!-- Карточка выбора станции -->
         <div class="station-card">
             <div class="station-info">
-                <h2 id="stationName">Серия 001 Бизнес</h2>
+                <div class="station-name" id="stationName">Серия 001 Бизнес</div>
                 <div class="station-price" id="stationPrice">150 000 ₽</div>
             </div>
             <select class="station-select" id="stationSelect">
-                <option value="150000" data-name="Серия 001 Бизнес" data-power="22" selected>Серия 001 Бизнес</option>
-                <option value="350000" data-name="Серия 002 Комфорт" data-power="50">Серия 002 Комфорт</option>
-                <option value="800000" data-name="Серия 003 Премиум" data-power="150">Серия 003 Премиум</option>
+                <option value="150000" data-name="Серия 001 Бизнес" data-power="22" selected>Серия 001 Бизнес - 150 000 ₽</option>
+                <option value="350000" data-name="Серия 002 Комфорт" data-power="50">Серия 002 Комфорт - 350 000 ₽</option>
+                <option value="800000" data-name="Серия 003 Премиум" data-power="150">Серия 003 Премиум - 800 000 ₽</option>
             </select>
         </div>
         
@@ -53,23 +58,22 @@
         
         <!-- Результаты -->
         <div class="results">
-            <div class="result-title">РЕЗУЛЬТАТЫ</div>
+            <div class="result-title">Результаты</div>
             <div class="result-main" id="monthlyRevenue">40 500 ₽</div>
-            <div class="result-sub" id="monthlyRevenueDetail">выручка в месяц</div>
-            
-            <div class="result-details">
-                <div class="detail-item">
-                    <div class="detail-label" id="profitLabel">Прибыль</div>
+            <div class="result-details-grid">
+                <div class="result-detail-item">
                     <div class="detail-value" id="monthlyProfit">35 600 ₽</div>
+                    <div class="detail-label">прибыль в месяц</div>
                 </div>
-                <div class="detail-item">
+                <div class="result-detail-item">
+                    <div class="detail-value" id="roi">285%</div>
                     <div class="detail-label">ROI</div>
-                    <div class="detail-value" id="roi">28%</div>
                 </div>
             </div>
             
-            <div class="payback-badge" id="paybackPeriod">
-                4.2 года <span>окупаемость</span>
+            <div class="payback-section">
+                <div class="payback-label">Окупаемость</div>
+                <div class="payback-value" id="paybackPeriod">4.2 года</div>
             </div>
         </div>
     </div>

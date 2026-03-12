@@ -6,13 +6,11 @@
 }
 
 body {
-    background-color: var(--tg-theme-bg-color, #ffffff);
-    color: var(--tg-theme-text-color, #000000);
+    background-color: #ffffff;
+    color: #000000;
     min-height: 100vh;
     padding: 0 16px;
-    /* Отступ сверху для системных кнопок */
-    padding-top: constant(safe-area-inset-top, 48px);
-    padding-top: env(safe-area-inset-top, 48px);
+    padding-top: 60px; /* Отступ сверху */
     padding-bottom: 20px;
 }
 
@@ -21,183 +19,206 @@ body {
     margin: 0 auto;
 }
 
-/* Тип станции (переключатель) */
+/* Шапка с крестиком */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: 16px 16px 8px 16px;
+    background: white;
+    z-index: 100;
+    border-bottom: 1px solid #f0f0f0;
+}
+
 .section-label {
     font-size: 13px;
     font-weight: 500;
-    color: var(--tg-theme-hint-color, #8e8e93);
-    margin-bottom: 8px;
+    color: #8e8e93;
     text-transform: uppercase;
     letter-spacing: 0.3px;
 }
 
+.close-btn {
+    background: #f2f2f7;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    font-size: 16px;
+    color: #007aff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Переключатель AC/DC */
 .type-switch {
     display: flex;
-    background: var(--tg-theme-secondary-bg-color, #f2f2f7);
+    background: #f2f2f7;
     border-radius: 10px;
     padding: 4px;
-    margin-bottom: 20px;
+    margin-bottom: 24px;
+    margin-top: 8px;
 }
 
 .type-btn {
     flex: 1;
     text-align: center;
-    padding: 10px 0;
+    padding: 12px 0;
     border-radius: 8px;
     font-weight: 500;
     font-size: 16px;
     border: none;
     background: transparent;
-    color: var(--tg-theme-text-color, #000000);
+    color: #000000;
     cursor: pointer;
-    transition: all 0.2s;
 }
 
 .type-btn.active {
-    background: var(--tg-theme-button-color, #007aff);
-    color: var(--tg-theme-button-text-color, #ffffff);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    background: #007aff;
+    color: white;
 }
 
 /* Карточка станции */
 .station-card {
-    background: var(--tg-theme-secondary-bg-color, #f2f2f7);
+    background: #f2f2f7;
     border-radius: 12px;
     padding: 16px;
-    margin-bottom: 20px;
+    margin-bottom: 24px;
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
-.station-info h2 {
+.station-info {
+    flex: 1;
+}
+
+.station-name {
     font-size: 16px;
     font-weight: 600;
     margin-bottom: 4px;
 }
 
 .station-price {
-    font-size: 15px;
-    color: var(--tg-theme-hint-color, #8e8e93);
+    font-size: 14px;
+    color: #8e8e93;
 }
 
 .station-select {
-    background: var(--tg-theme-bg-color, #ffffff);
-    border: 1px solid var(--tg-theme-hint-color, #c6c6c8);
+    background: white;
+    border: 1px solid #c6c6c8;
     border-radius: 8px;
-    padding: 8px 12px;
+    padding: 10px 12px;
     font-size: 14px;
-    color: var(--tg-theme-text-color, #000000);
+    color: #000;
     outline: none;
+    width: 180px;
 }
 
 /* Параметры расчета */
 .params-title {
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 600;
-    margin-bottom: 16px;
+    margin-bottom: 20px;
+    color: #000;
 }
 
 .param-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 16px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #f0f0f0;
+    padding-bottom: 12px;
 }
 
 .param-label {
-    font-size: 15px;
-    color: var(--tg-theme-hint-color, #8e8e93);
+    font-size: 16px;
+    color: #000;
 }
 
 .param-input {
-    background: var(--tg-theme-secondary-bg-color, #f2f2f7);
+    background: #f2f2f7;
     border: none;
     border-radius: 10px;
-    padding: 10px 14px;
+    padding: 12px 16px;
     width: 120px;
     text-align: right;
-    font-size: 15px;
-    color: var(--tg-theme-text-color, #000000);
+    font-size: 16px;
+    color: #000;
     outline: none;
-}
-
-.param-input:focus {
-    box-shadow: 0 0 0 2px var(--tg-theme-button-color, #007aff);
 }
 
 /* Результаты */
 .results {
-    background: var(--tg-theme-secondary-bg-color, #f2f2f7);
+    background: #f2f2f7;
     border-radius: 16px;
-    padding: 20px;
-    margin-top: 24px;
+    padding: 24px 20px;
+    margin-top: 32px;
 }
 
 .result-title {
     font-size: 13px;
     font-weight: 500;
-    color: var(--tg-theme-hint-color, #8e8e93);
-    margin-bottom: 4px;
+    color: #8e8e93;
+    margin-bottom: 8px;
     text-transform: uppercase;
 }
 
 .result-main {
-    font-size: 32px;
+    font-size: 42px;
     font-weight: 700;
-    color: var(--tg-theme-text-color, #000000);
+    color: #000;
+    margin-bottom: 24px;
+}
+
+.result-details-grid {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+.result-detail-item {
+    flex: 1;
+}
+
+.result-detail-item .detail-value {
+    font-size: 24px;
+    font-weight: 600;
+    color: #000;
     margin-bottom: 4px;
 }
 
-.result-sub {
-    font-size: 14px;
-    color: var(--tg-theme-hint-color, #8e8e93);
-    margin-bottom: 20px;
+.result-detail-item .detail-label {
+    font-size: 13px;
+    color: #8e8e93;
 }
 
-.result-details {
+.payback-section {
+    background: #007aff;
+    border-radius: 12px;
+    padding: 16px;
     display: flex;
     justify-content: space-between;
-    padding-top: 16px;
-    border-top: 1px solid var(--tg-theme-hint-color, #c6c6c8);
+    align-items: center;
 }
 
-.detail-item {
-    flex: 1;
-    text-align: center;
-}
-
-.detail-label {
-    font-size: 12px;
-    color: var(--tg-theme-hint-color, #8e8e93);
-    margin-bottom: 4px;
-}
-
-.detail-value {
+.payback-label {
+    color: white;
     font-size: 16px;
-    font-weight: 600;
-}
-
-.payback-badge {
-    background: var(--tg-theme-button-color, #007aff);
-    color: var(--tg-theme-button-text-color, #ffffff);
-    padding: 12px 16px;
-    border-radius: 12px;
-    text-align: center;
-    font-size: 18px;
-    font-weight: 600;
-    margin-top: 16px;
-}
-
-.payback-badge span {
-    font-size: 14px;
-    font-weight: 400;
+    font-weight: 500;
     opacity: 0.9;
 }
 
-.footnote {
-    font-size: 11px;
-    color: var(--tg-theme-hint-color, #8e8e93);
-    margin-top: 8px;
-    text-align: center;
+.payback-value {
+    color: white;
+    font-size: 24px;
+    font-weight: 700;
 }

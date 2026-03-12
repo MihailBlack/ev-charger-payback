@@ -2,16 +2,15 @@
 let tg = window.Telegram?.WebApp;
 if (tg) {
     tg.expand();
-    tg.enableClosingConfirmation();
+    tg.ready();
 }
 
 // Константы
 const EFFICIENCY = {
-    ac: 0.90, // КПД 90% для AC
-    dc: 0.93  // КПД 93% для DC
+    ac: 0.90,
+    dc: 0.93
 };
 
-// Текущий тип станции
 let currentType = 'ac';
 
 // Элементы
@@ -25,28 +24,23 @@ const loadHours = document.getElementById('loadHours');
 const energyCost = document.getElementById('energyCost');
 const clientPrice = document.getElementById('clientPrice');
 const monthlyRevenue = document.getElementById('monthlyRevenue');
-const monthlyRevenueDetail = document.getElementById('monthlyRevenueDetail');
 const monthlyProfit = document.getElementById('monthlyProfit');
 const roi = document.getElementById('roi');
 const paybackPeriod = document.getElementById('paybackPeriod');
-const profitLabel = document.getElementById('profitLabel');
 
-// Функция вибрации
+// Вибрация
 function vibrate() {
     if (tg && tg.HapticFeedback) {
         tg.HapticFeedback.impactOccurred('light');
-    } else if (navigator.vibrate) {
-        navigator.vibrate(10);
     }
 }
 
-// Обработчики переключения типа
+// Обработчики
 btnAC.addEventListener('click', () => {
     vibrate();
     btnAC.classList.add('active');
     btnDC.classList.remove('active');
     currentType = 'ac';
-    profitLabel.textContent = 'Прибыль*';
     calculate();
 });
 
@@ -55,11 +49,9 @@ btnDC.addEventListener('click', () => {
     btnDC.classList.add('active');
     btnAC.classList.remove('active');
     currentType = 'dc';
-    profitLabel.textContent = 'Прибыль';
     calculate();
 });
 
-// Обработчик выбора станции
 stationSelect.addEventListener('change', (e) => {
     vibrate();
     const selected = e.target.options[e.target.selectedIndex];
@@ -68,7 +60,6 @@ stationSelect.addEventListener('change', (e) => {
     calculate();
 });
 
-// Обработчики ввода
 [stationsCount, loadHours, energyCost, clientPrice].forEach(input => {
     input.addEventListener('input', () => {
         vibrate();
@@ -76,9 +67,8 @@ stationSelect.addEventListener('change', (e) => {
     });
 });
 
-// Функция расчета
+// Расчет
 function calculate() {
-    // Получаем значения
     const stationCost = parseFloat(stationSelect.value) * parseFloat(stationsCount.value);
     const hours = parseFloat(loadHours.value) || 0;
     const buyTariff = parseFloat(energyCost.value) || 0;
@@ -86,36 +76,38 @@ function calculate() {
     const power = parseFloat(stationSelect.options[stationSelect.selectedIndex].getAttribute('data-power')) || 22;
     const efficiency = EFFICIENCY[currentType];
 
-    // Расчеты
-    const soldEnergy = power * hours * 30; // кВт·ч в месяц
-    const boughtEnergy = soldEnergy / efficiency; // кВт·ч в месяц
+    // Продано клиенту
+    const soldEnergy = power * hours * 30;
+    
+    // Куплено у сети (с учетом потерь)
+    const boughtEnergy = soldEnergy / efficiency;
+    
+    // Расходы на электричество
     const electricityCost = boughtEnergy * buyTariff;
+    
+    // Выручка
     const revenue = soldEnergy * sellTariff;
+    
+    // Прибыль
     const profit = revenue - electricityCost;
+
+    // ROI (годовой)
     const yearlyProfit = profit * 12;
     const roiValue = (yearlyProfit / stationCost) * 100;
+
+    // Окупаемость
     let paybackYears = stationCost / (profit * 12);
 
-    // Форматируем результаты
+    // Форматируем
     monthlyRevenue.textContent = Math.round(revenue).toLocaleString('ru-RU') + ' ₽';
-    monthlyRevenueDetail.textContent = currentType === 'ac' ? 
-        'выручка в месяц (до вычета потерь)' : 
-        'выручка в месяц';
-    
     monthlyProfit.textContent = Math.round(profit).toLocaleString('ru-RU') + ' ₽';
-    roi.textContent = roiValue.toFixed(1) + '%';
+    roi.textContent = Math.round(roiValue) + '%';
     
     if (profit <= 0) {
-        paybackPeriod.innerHTML = '∞ <span>никогда</span>';
+        paybackPeriod.textContent = '∞';
     } else {
         const years = paybackYears.toFixed(1);
-        const months = Math.round(paybackYears * 12);
-        paybackPeriod.innerHTML = `${years} года <span>(${months} мес.)</span>`;
-    }
-
-    // Добавляем звездочку для AC
-    if (currentType === 'ac') {
-        monthlyProfit.innerHTML = Math.round(profit).toLocaleString('ru-RU') + ' ₽*';
+        paybackPeriod.textContent = years + ' года';
     }
 }
 

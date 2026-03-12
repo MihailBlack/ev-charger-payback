@@ -396,18 +396,19 @@ function calculate() {
         return Math.round(num).toLocaleString() + ' ₽';
     };
     
-    // ✨ ИЗМЕНЕНО: кВт·ч → кВт
+    // Функция для форматирования энергии
     const formatEnergy = (num) => {
         return Math.round(num).toLocaleString() + ' кВт';
     };
     
-    // Формируем HTML для детализации энергии
+    // Формируем HTML для детализации энергии С УЧЕТОМ КОЛИЧЕСТВА СТАНЦИЙ
     let energyBreakdownHtml = '';
     energyDetails.breakdown.forEach(item => {
+        const energyForAllStations = item.energy * stationCount; // УМНОЖАЕМ НА КОЛИЧЕСТВО СТАНЦИЙ
         energyBreakdownHtml += `
             <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px; padding-left: 12px; border-left: 2px solid #007AFF;">
-                <span style="color: #666;">${item.speed} кВт × ${item.hours}ч</span>
-                <span style="font-weight: 500;">${formatEnergy(item.energy)}</span>
+                <span style="color: #666;">${item.speed} кВт × ${item.hours}ч × ${stationCount} шт</span>
+                <span style="font-weight: 500;">${formatEnergy(energyForAllStations)}</span>
             </div>
         `;
     });
@@ -442,7 +443,7 @@ function calculate() {
                 <h3 style="font-size: 16px; font-weight: 600; color: #1a1a1a;">Детализация по энергии</h3>
             </div>
             
-            <!-- ТОЛЬКО ЦИФРЫ, БЕЗ ЛИШНИХ НАДПИСЕЙ -->
+            <!-- ТОЛЬКО ЦИФРЫ, С УЧЕТОМ КОЛИЧЕСТВА СТАНЦИЙ -->
             <div style="margin-bottom: 20px;">
                 ${energyBreakdownHtml}
             </div>
@@ -450,18 +451,15 @@ function calculate() {
             <div style="background: white; border-radius: 16px; padding: 16px; margin-top: 16px;">
                 <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
                     <span style="color: #666;">Продано клиентам:</span>
-                    <!-- ✨ ИЗМЕНЕНО: кВт·ч → кВт -->
-                    <span style="font-weight: 700;">${formatEnergy(energyPerDay * 30)}/мес</span>
+                    <span style="font-weight: 700;">${formatEnergy(energyPerDay * 30 * stationCount)}/мес</span>
                 </div>
                 <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
                     <span style="color: #666;">Потреблено из сети:</span>
-                    <!-- ✨ ИЗМЕНЕНО: кВт·ч → кВт -->
-                    <span style="font-weight: 700;">${formatEnergy(energyConsumed * 30)}/мес</span>
+                    <span style="font-weight: 700;">${formatEnergy(energyConsumed * 30 * stationCount)}/мес</span>
                 </div>
                 <div style="display: flex; justify-content: space-between; margin-bottom: 10px; color: #FF9F0A;">
                     <span>Потери на КПД (${currentType === 'dc' ? '7%' : '10%'}):</span>
-                    <!-- ✨ ИЗМЕНЕНО: кВт·ч → кВт -->
-                    <span style="font-weight: 700;">${formatEnergy(energyLoss * 30)}/мес</span>
+                    <span style="font-weight: 700;">${formatEnergy(energyLoss * 30 * stationCount)}/мес</span>
                 </div>
                 <div style="display: flex; justify-content: space-between; padding-top: 12px; border-top: 1px dashed #ccc; margin-top: 8px;">
                     <span style="color: #666;">Стоимость 1 кВт·ч:</span>

@@ -16,9 +16,9 @@ body {
 .container {
     max-width: 500px;
     width: 100%;
-    padding: 30px 16px 30px 16px; /* 🚀 ОГРОМНЫЙ ОТСТУП 30px СВЕРХУ */
-    margin-top: env(safe-area-inset-top, 30px);
-    padding-top: max(30px, env(safe-area-inset-top, 30px));
+    padding: 16px 16px 30px 16px; /* 🚀 ОГРОМНЫЙ ОТСТУП 16px СВЕРХУ */
+    margin-top: env(safe-area-inset-top, 16px);
+    padding-top: max(30px, env(safe-area-inset-top, 16px));
     padding-bottom: max(30px, env(safe-area-inset-bottom, 20px));
 }
 

@@ -58,20 +58,22 @@ function formatPayback(months) {
         return '∞ (нет прибыли)';
     }
     
-    const years = months / 12;
-    const wholeYears = Math.floor(years);
-    const remainingMonths = Math.round((years - wholeYears) * 12);
+    // Округляем до целых месяцев
+    const totalMonths = Math.round(months);
     
-    if (wholeYears === 0) {
+    // Переводим в годы и месяцы
+    const years = Math.floor(totalMonths / 12);
+    const remainingMonths = totalMonths % 12;
+    
+    if (years === 0) {
         // Меньше года
-        const monthsRound = Math.round(months);
-        return `${monthsRound} ${getMonthsText(monthsRound)}`;
+        return `${totalMonths} ${getMonthsText(totalMonths)}`;
     } else if (remainingMonths === 0) {
         // Ровно год/года/лет
-        return `${wholeYears} ${getYearsText(wholeYears)}`;
+        return `${years} ${getYearsText(years)}`;
     } else {
         // Годы и месяцы
-        return `${wholeYears} ${getYearsText(wholeYears)} ${remainingMonths} ${getMonthsText(remainingMonths)}`;
+        return `${years} ${getYearsText(years)} ${remainingMonths} ${getMonthsText(remainingMonths)}`;
     }
 }
 

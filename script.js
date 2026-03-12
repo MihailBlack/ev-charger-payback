@@ -128,11 +128,6 @@ async function loadStations() {
             // 2. Обновляем селект и выбираем первую станцию
             updateModelSelect(false); // false = выбираем первую станцию
             
-            // 3. Сразу делаем расчет
-            setTimeout(() => {
-                if (selectedStation) calculate();
-            }, 100);
-            
             vibrate('success');
         }
     } catch (error) {
@@ -149,9 +144,6 @@ async function loadStations() {
         
         highlightActiveType('ac');
         updateModelSelect(false);
-        setTimeout(() => {
-            if (selectedStation) calculate();
-        }, 100);
         
         vibrate('error');
     }
@@ -204,8 +196,6 @@ function updateStationInfo() {
     }
     
     selectedStation = stations.find(s => s.id == stationId);
-    
-    // УБРАН блок с subsidyInfo
     
     // Показываем чекбокс субсидии 50% только для станции 160 кВт
     if (selectedStation && selectedStation.name.includes('160')) {

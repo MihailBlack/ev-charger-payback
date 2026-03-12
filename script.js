@@ -3,7 +3,7 @@ let stations = [];
 let currentType = 'ac';
 let selectedStation = null;
 let keyboardVisible = false;
-let subsidyApplied = false; // Флаг для субсидии 50%
+let subsidyApplied = false; // Флаг для субсидии 50% (только для 160 кВт)
 
 // Инициализация Telegram Mini App
 if (window.Telegram && Telegram.WebApp) {
@@ -117,8 +117,8 @@ async function loadStations() {
                 power: parseFloat(row[3]),
                 realSpeed: parseFloat(row[4]),
                 ports: parseInt(row[5]),
-                price: parseFloat(row[6]),
-                subsidy: row[7] === 'Да' || row[7] === 'да' || row[7] === 'TRUE'
+                price: parseFloat(row[6])
+                // Убрано поле subsidy
             }));
             
             // После загрузки данных:
@@ -139,12 +139,12 @@ async function loadStations() {
         console.error('Ошибка загрузки:', error);
         // Показываем заглушку с тестовыми данными, чтобы приложение не падало
         stations = [
-            { id: 1, type: 'ac', name: 'AC 001', power: 7.5, price: 150000, subsidy: false },
-            { id: 2, type: 'ac', name: 'AC 002', power: 15, price: 250000, subsidy: true },
-            { id: 3, type: 'dc', name: 'DC 40', power: 40, price: 500000, subsidy: false },
-            { id: 4, type: 'dc', name: 'DC 80', power: 80, price: 800000, subsidy: false },
-            { id: 5, type: 'dc', name: 'DC 120', power: 120, price: 1200000, subsidy: false },
-            { id: 6, type: 'dc', name: 'DC 160', power: 160, price: 1600000, subsidy: true }
+            { id: 1, type: 'ac', name: 'AC 001', power: 7.5, price: 150000 },
+            { id: 2, type: 'ac', name: 'AC 002', power: 15, price: 250000 },
+            { id: 3, type: 'dc', name: 'DC 40', power: 40, price: 500000 },
+            { id: 4, type: 'dc', name: 'DC 80', power: 80, price: 800000 },
+            { id: 5, type: 'dc', name: 'DC 120', power: 120, price: 1200000 },
+            { id: 6, type: 'dc', name: 'DC 160', power: 160, price: 1600000 }
         ];
         
         highlightActiveType('ac');
@@ -175,7 +175,7 @@ function updateModelSelect(keepEmpty = false) {
     filtered.forEach(station => {
         const option = document.createElement('option');
         option.value = station.id;
-        option.textContent = `${station.name} - ${station.price.toLocaleString()} ₽${station.subsidy ? ' ✨' : ''}`;
+        option.textContent = `${station.name} - ${station.price.toLocaleString()} ₽`; // Убрана звездочка
         select.appendChild(option);
     });
     
@@ -186,7 +186,6 @@ function updateModelSelect(keepEmpty = false) {
     } else {
         select.value = '';
         selectedStation = null;
-        document.getElementById('subsidyInfo').style.display = 'none';
         document.getElementById('subsidyCheckboxContainer').style.display = 'none';
         document.getElementById('results').innerHTML = '<div class="info-message">👆 Выберите модель станции для расчета</div>';
     }
@@ -199,7 +198,6 @@ function updateStationInfo() {
     
     if (!stationId) {
         selectedStation = null;
-        document.getElementById('subsidyInfo').style.display = 'none';
         document.getElementById('subsidyCheckboxContainer').style.display = 'none';
         document.getElementById('results').innerHTML = '<div class="info-message">👆 Выберите модель станции для расчета</div>';
         return;
@@ -207,12 +205,7 @@ function updateStationInfo() {
     
     selectedStation = stations.find(s => s.id == stationId);
     
-    // Показываем информацию о субсидии из таблицы
-    if (selectedStation && selectedStation.subsidy) {
-        document.getElementById('subsidyInfo').style.display = 'block';
-    } else {
-        document.getElementById('subsidyInfo').style.display = 'none';
-    }
+    // УБРАН блок с subsidyInfo
     
     // Показываем чекбокс субсидии 50% только для станции 160 кВт
     if (selectedStation && selectedStation.name.includes('160')) {
@@ -416,7 +409,7 @@ function calculate() {
         `;
     });
     
-    // Информация о субсидии для отображения
+    // Информация о субсидии для отображения (только для 160 кВт)
     const subsidyText = (selectedStation.name.includes('160') && subsidyApplied) 
         ? `<div style="margin-top: 8px; font-size: 13px; color: #34C759; background: #e8f5e9; padding: 8px 12px; border-radius: 12px;">✨ Применена субсидия 50% - цена станции ${formatMoney(stationPrice)}</div>` 
         : '';
